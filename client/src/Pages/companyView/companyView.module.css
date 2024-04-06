@@ -1,0 +1,36 @@
+.chartRow {
+  flex-wrap: wrap;
+  margin: 0 -15px 25px;
+  padding-top: 20px;
+}
+
+.chartCol {
+  padding: 0 15px;
+  width: 50%;
+}
+
+.chartRowInner {
+  flex-wrap: wrap;
+  margin: 0 -15px 25px;
+}
+
+.chartColInner {
+  padding: 0 15px;
+  width: 50%;
+}
+
+.factorRow {
+  flex-wrap: wrap;
+  margin: 0 -20px -23px;
+}
+
+.factorCol {
+  padding: 0 20px 23px;
+  width: 25%;
+}
+
+.DetailCard {
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: unset !important;
+}

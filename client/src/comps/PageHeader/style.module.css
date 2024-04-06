@@ -1,0 +1,101 @@
+.pageTitle {
+  color: #000;
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.pageSubTitle {
+  color: #000;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+.tooltipContainer {
+  position: relative;
+  cursor: pointer;
+}
+
+.tooltip {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  color: black;
+  padding: 28px 25px;
+  z-index: 1;
+  display: none;
+  width: 426px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0px 32px 32px -24px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(4px);
+}
+
+.tooltipContainer:hover .tooltip {
+  display: block;
+}
+
+.tooltipContent {
+  color: #000;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.filter {
+  border-radius: 14px;
+  border: 0.6px solid #d5d5d5;
+  background: #f9f9fb;
+  max-width: 852px;
+  width: 100%;
+  display: flex;
+  margin: 0 20px;
+}
+
+.filterIconWrap {
+  border-right: 0.3px solid rgba(151, 151, 151, 0.6);
+  min-height: 68.4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  width: 8%;
+}
+
+.filterTitle {
+  border-right: 0.3px solid rgba(151, 151, 151, 0.6);
+  min-height: 68.4px;
+  width: 12.23%;
+  color: #202224;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 68.4px;
+  text-align: center;
+  padding: 0 5px;
+}
+
+.filterBtn {
+  padding: 0;
+}
+
+.filter .filterReset {
+  width: 19.77%;
+  color: #ff6871;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 68.4px;
+  text-align: center;
+  padding: 0 5px;
+  height: auto;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 14px 14px 0;
+}
+
+.filter .filterReset:hover {
+  background: transparent;
+}

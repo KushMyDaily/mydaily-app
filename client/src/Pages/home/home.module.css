@@ -1,0 +1,68 @@
+.chartRow {
+  flex-wrap: wrap;
+  margin: 0 -20px 25px;
+  padding-top: 20px;
+}
+
+.chartCol {
+  padding: 0 20px;
+  width: 50%;
+}
+
+.chartRowInner {
+  flex-wrap: wrap;
+  margin: 0 -15px 25px;
+}
+
+.chartColInner {
+  padding: 0 15px;
+  width: 50%;
+}
+
+.factorRow {
+  flex-wrap: wrap;
+  margin: 0 -20px -23px;
+}
+
+.factorCol {
+  padding: 0 20px 23px;
+  width: 25%;
+}
+
+.DetailCard {
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: unset !important;
+  height: 100%;
+}
+
+.calenderCard {
+  border-radius: 10px !important;
+  background: #ffffff !important;
+}
+
+.calenderCardInner {
+  padding: 60px 25px 30px !important;
+}
+
+@media (max-width: 1439px) {
+  .chartRow {
+    margin: 0 -15px 25px;
+  }
+
+  .chartCol {
+    padding: 0 15px;
+  }
+
+  .factorRow {
+    margin: 0 -15px -22px;
+  }
+
+  .factorCol {
+    padding: 0 15px 22px;
+  }
+
+  .DetailCard {
+    padding: 30px 25px;
+  }
+}

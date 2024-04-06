@@ -1,0 +1,11 @@
+.cardWrap {
+  padding: 30px !important;
+  border-radius: 10px !important;
+  box-shadow: unset !important;
+}
+
+@media (max-width: 1439px) {
+  .cardWrap {
+    padding: 30px 20px !important;
+  }
+}

@@ -1,0 +1,14 @@
+.radioBtn {
+  width: calc(33.33% - 10.75px);
+  margin: 0 !important;
+  border-radius: 17px;
+  border: 0.6px solid #979797;
+}
+
+.radioBtn div {
+  color: #202224;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+  padding: 7px 10px;
+}

@@ -1,0 +1,10 @@
+.cardWrap {
+  padding: 30px 30px !important;
+  border-radius: 10px !important;
+  box-shadow: unset !important;
+  width: 100% !important;
+}
+
+button.active {
+  outline: 3px solid #d5d5d5;
+}
