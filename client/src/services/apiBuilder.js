@@ -5,7 +5,7 @@ import {
   signOutUser,
 } from "../redux/features/signin/signinThunk";
 
-const baseURL = "http://localhost:3001"; // process.env.NEXT_PUBLIC_API_BASE_URL;
+const baseURL = process.env.PUBLIC_API_BASE_URL;
 
 export const API = axios.create({
   baseURL: baseURL,
