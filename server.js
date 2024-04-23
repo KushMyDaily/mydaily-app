@@ -8,7 +8,7 @@ const app = express()
 const PORT = 3001
 
 const corsOptions = {
-    origin: 'http://13.43.110.169:3001',
+    origin: 'http://13.43.110.169:3000',
     credentials: true, //access-control-allow-credentials:true
     optionSuccessStatus: 200,
 }
