@@ -9,145 +9,166 @@ import {
   Select,
   Button,
   Image,
+  useToast,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PageHeader from "../../comps/PageHeader";
 import ImageUpload from "../../comps/ImageUpload";
 import styles from "./settings.module.css";
 
-import { useEffect, useState } from "react";
 import { signOutUser } from "../../redux/features/signin/signinThunk";
-import { useDispatch } from "react-redux";
+import { google } from "../../redux/features/google/googleThunk";
+import { useDispatch, useSelector } from "react-redux";
+import googleLogo from "../../assets/google-logo.jpg";
+import mydailyLogo from "../../assets/img/mydailyLogo.png";
 
-const GOOGLE_CLIENT_ID =
-  "82428000378-qgiakmtoq94ovgrjtja4bistjten4kgm.apps.googleusercontent.com";
-const GOOGLE_CLIENT_SECRET = "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";
-const SCOPES =
-  "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly";
+// const GOOGLE_CLIENT_ID =
+//   "82428000378-qgiakmtoq94ovgrjtja4bistjten4kgm.apps.googleusercontent.com";
+// const GOOGLE_CLIENT_SECRET = "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";
+// const SCOPES =
+// "https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly";
 
 function Settings() {
   //const [user, setUser] = useState({});
-  const [codeClient, setCodeClient] = useState({});
+  //const [codeClient, setCodeClient] = useState({});
   const [uploadedImage, setUploadedImage] = useState(null);
 
+  const { user } = useSelector((state) => state.signin);
+  const { url, error } = useSelector((state) => state.google);
   const dispatch = useDispatch();
+  const toast = useToast();
+
+  useEffect(() => {
+    if (url) {
+      window.location.replace(url);
+    }
+
+    if (error) {
+      toast({
+        title: error,
+        status: "error",
+        position: "top-right",
+        isClosable: true,
+      });
+    }
+  }, [url, error]);
 
   const handleImageUpload = (imageDataURL) => {
     setUploadedImage(imageDataURL);
   };
 
-  function handleCallbackResponse(response) {
-    // eslint-disable-next-line no-console
-    console.log("Encoded JWT ID token: " + response.credential);
-    // var userObject = jwt_decode(response.credential)
-    //console.log(userObject)
-    // setUser(userObject)
-  }
+  // function handleCallbackResponse(response) {
+  //   // eslint-disable-next-line no-console
+  //   console.log("Encoded JWT ID token: " + response.credential);
+  //   // var userObject = jwt_decode(response.credential)
+  //   //console.log(userObject)
+  //   // setUser(userObject)
+  // }
 
-  function getCode() {
-    codeClient.requestCode();
-  }
-
-  function getTokens(response) {
-    var authorizationCode = response.code;
-    exchangeAuthorizationCode(authorizationCode);
-  }
-
-  const exchangeAuthorizationCode = async (authorizationCode) => {
-    const tokenEndpoint = "https://oauth2.googleapis.com/token";
-    const clientId = GOOGLE_CLIENT_ID;
-    const clientSecret = GOOGLE_CLIENT_SECRET;
-    const redirectUri = "http://localhost:3000";
-
-    const requestBody = new URLSearchParams();
-    requestBody.append("code", authorizationCode);
-    requestBody.append("client_id", clientId);
-    requestBody.append("client_secret", clientSecret);
-    requestBody.append("redirect_uri", redirectUri);
-    requestBody.append("grant_type", "authorization_code");
-
-    try {
-      const response = await fetch(tokenEndpoint, {
-        method: "POST",
-        body: requestBody,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to exchange authorization code for tokens");
-      }
-
-      // const tokenData = await response.json();
-      // const accessToken = tokenData.access_token;
-      // const refreshToken = tokenData.refresh_token;
-      //const currentUser = await Auth.currentAuthenticatedUser();
-
-      // const createGoogleToken = `
-      //     mutation CreateGoogleToken(
-      //       $input: CreateGoogleTokenInput!
-      //     ) {
-      //       createGoogleToken(input: $input) {
-      //         userEmail
-      //         accessToken
-      //         refreshToken
-      //         expirationDate
-      //       }
-      //     }
-      // `;
-
-      // Compute the expiration date 1 hour from now
-      let expirationDate = new Date();
-      expirationDate.setHours(expirationDate.getHours() + 1);
-
-      // Prepare the token record for saving to DynamoDB via AppSync/GraphQL
-      // const tokenRecord = {
-      //   // userEmail: currentUser.attributes.email, // assuming you have the user's email at this point
-      //   accessToken: accessToken,
-      //   refreshToken: refreshToken,
-      //   expirationDate: expirationDate.toISOString(), // ISO format includes date, time, and timezone
-      // };
-
-      try {
-        // await API.graphql(graphqlOperation(createGoogleToken, { input: tokenRecord }));
-      } catch (error) {
-        // console.error("Error saving token to database:", error);
-      }
-    } catch (error) {
-      // console.error("Error exchanging authorization code:", error);
-    }
+  const getCode = async () => {
+    await dispatch(google({ userId: user.id }));
   };
 
-  useEffect(() => {
-    /* global */
-    // const google = window.google;
+  // function getTokens(response) {
+  //   var authorizationCode = response.code;
+  //   exchangeAuthorizationCode(authorizationCode);
+  // }
 
-    window.google?.accounts?.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleCallbackResponse,
-    });
+  // const exchangeAuthorizationCode = async (authorizationCode) => {
+  //   const tokenEndpoint = "https://oauth2.googleapis.com/token";
+  //   const clientId = GOOGLE_CLIENT_ID;
+  //   const clientSecret = GOOGLE_CLIENT_SECRET;
+  //   const redirectUri = "http://localhost:3000";
 
-    window.google?.accounts?.id.renderButton(
-      document.getElementById("signInDiv"),
-      {
-        theme: "outline",
-        size: "large",
-      },
-    );
+  //   const requestBody = new URLSearchParams();
+  //   requestBody.append("code", authorizationCode);
+  //   requestBody.append("client_id", clientId);
+  //   requestBody.append("client_secret", clientSecret);
+  //   requestBody.append("redirect_uri", redirectUri);
+  //   requestBody.append("grant_type", "authorization_code");
 
-    // Code Client for Refresh Token
-    setCodeClient(
-      window.google?.accounts?.oauth2.initCodeClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: SCOPES,
-        ux_mode: "popup",
-        callback: getTokens,
-      }),
-    );
+  //   try {
+  //     const response = await fetch(tokenEndpoint, {
+  //       method: "POST",
+  //       body: requestBody,
+  //       headers: {
+  //         "Content-Type": "application/x-www-form-urlencoded",
+  //       },
+  //     });
 
-    window.google?.accounts?.id.prompt();
-  }, []);
+  //     if (!response.ok) {
+  //       throw new Error("Failed to exchange authorization code for tokens");
+  //     }
+
+  //     // const tokenData = await response.json();
+  //     // const accessToken = tokenData.access_token;
+  //     // const refreshToken = tokenData.refresh_token;
+  //     //const currentUser = await Auth.currentAuthenticatedUser();
+
+  //     // const createGoogleToken = `
+  //     //     mutation CreateGoogleToken(
+  //     //       $input: CreateGoogleTokenInput!
+  //     //     ) {
+  //     //       createGoogleToken(input: $input) {
+  //     //         userEmail
+  //     //         accessToken
+  //     //         refreshToken
+  //     //         expirationDate
+  //     //       }
+  //     //     }
+  //     // `;
+
+  //     // Compute the expiration date 1 hour from now
+  //     let expirationDate = new Date();
+  //     expirationDate.setHours(expirationDate.getHours() + 1);
+
+  //     // Prepare the token record for saving to DynamoDB via AppSync/GraphQL
+  //     // const tokenRecord = {
+  //     //   // userEmail: currentUser.attributes.email, // assuming you have the user's email at this point
+  //     //   accessToken: accessToken,
+  //     //   refreshToken: refreshToken,
+  //     //   expirationDate: expirationDate.toISOString(), // ISO format includes date, time, and timezone
+  //     // };
+
+  //     try {
+  //       // await API.graphql(graphqlOperation(createGoogleToken, { input: tokenRecord }));
+  //     } catch (error) {
+  //       // console.error("Error saving token to database:", error);
+  //     }
+  //   } catch (error) {
+  //     // console.error("Error exchanging authorization code:", error);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   /* global */
+  //   // const google = window.google;
+
+  //   window.google?.accounts?.id.initialize({
+  //     client_id: GOOGLE_CLIENT_ID,
+  //     callback: handleCallbackResponse,
+  //   });
+
+  //   window.google?.accounts?.id.renderButton(
+  //     document.getElementById("signInDiv"),
+  //     {
+  //       theme: "outline",
+  //       size: "large",
+  //     },
+  //   );
+
+  //   // Code Client for Refresh Token
+  //   // setCodeClient(
+  //   //   window.google?.accounts?.oauth2.initCodeClient({
+  //   //     client_id: GOOGLE_CLIENT_ID,
+  //   //     scope: SCOPES,
+  //   //     ux_mode: "popup",
+  //   //     callback: getTokens,
+  //   //   }),
+  //   // );
+
+  //   window.google?.accounts?.id.prompt();
+  // }, []);
 
   const signOut = async () => {
     try {
@@ -283,30 +304,41 @@ function Settings() {
             </Box>
             <Box width={"50%"} maxWidth={"470px"} pl={5}>
               {/*<div id="signInDiv"></div>*/}
-              <Button
-                className={styles.reachBtn}
-                colorScheme="black"
-                variant="solid"
-                mt={5}
-                w={"100%"}
-                p={"0 15px"}
-                justifyContent={"flex-start"}
-                leftIcon={<Image src="../images/mydailylogo.png" />}
-              >
-                Reach out to us
-              </Button>
+              <a href="https://slack.com/oauth/v2/authorize?client_id=4578727160275.4581313497012&scope=channels:history,channels:read,chat:write,commands,conversations.connect:manage,conversations.connect:read,conversations.connect:write,groups:history,groups:read,im:history,users:read,users:read.email,channels:write.invites,groups:write.invites,mpim:write.invites,channels:manage,groups:write,im:write,mpim:write&user_scope=channels:write,channels:write.invites">
+                <img
+                  alt="Add to Slack"
+                  height="40"
+                  width="139"
+                  src="https://platform.slack-edge.com/img/add_to_slack.png"
+                  srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
+                />
+              </a>
+
               <Button
                 className={styles.googleBtn}
                 colorScheme="white"
                 variant="solid"
                 mt={5}
-                w={"100%"}
+                w={"60%"}
                 p={"0 15px"}
                 justifyContent={"flex-start"}
-                leftIcon={<Image src="../images/googlelogo.png" />}
+                leftIcon={<Image src={googleLogo} style={{ width: "25px" }} />}
                 onClick={getCode}
               >
                 Connect
+              </Button>
+
+              <Button
+                className={styles.reachBtn}
+                colorScheme="black"
+                variant="solid"
+                mt={5}
+                w={"60%"}
+                p={"0 15px"}
+                justifyContent={"flex-start"}
+                leftIcon={<Image src={mydailyLogo} style={{ width: "25px" }} />}
+              >
+                Reach out to us
               </Button>
               {/*<input type="submit" onClick={getCode} value="Get Events"/>*/}
             </Box>

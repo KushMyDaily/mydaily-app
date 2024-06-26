@@ -1,22 +1,21 @@
 'use strict'
 // const sequelizePaginate = require('sequelize-paginate')
 module.exports = (sequelize, DataTypes) => {
-    const Role = sequelize.define('roles', {
+    const SurveyType = sequelize.define('survey_types', {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
             allowNull: false,
         },
-        name: DataTypes.STRING,
+        type: DataTypes.STRING,
     })
 
-    Role.associate = function (models) {
-        Role.belongsToMany(models.user, {
-            through: 'user_roles',
-            foreignKey: 'roleId',
-            otherKey: 'userId',
+    SurveyType.associate = function (models) {
+        SurveyType.hasOne(models.survey, {
+            foreignKey: 'surveyTypeId',
+            targetKey: 'id',
         })
     }
-    return Role
+    return SurveyType
 }

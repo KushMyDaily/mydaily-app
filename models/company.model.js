@@ -1,22 +1,25 @@
-module.exports = (sequelize, Sequelize) => {
+'use strict'
+// const sequelizePaginate = require('sequelize-paginate')
+module.exports = (sequelize, DataTypes) => {
     const Company = sequelize.define('company', {
         id: {
-            type: Sequelize.INTEGER,
+            type: DataTypes.INTEGER,
             primaryKey: true,
+            autoIncrement: true,
+            allowNull: false,
         },
-        name: {
-            type: Sequelize.STRING,
-        },
-        domain: {
-            type: Sequelize.STRING,
-        },
-        subscriptions: {
-            type: Sequelize.INTEGER,
-        },
-        status: {
-            type: Sequelize.BOOLEAN,
-        },
+        name: DataTypes.STRING,
+        domain: DataTypes.STRING,
+        subscriptions: DataTypes.INTEGER,
+        status: DataTypes.BOOLEAN,
     })
+
+    Company.associate = function (models) {
+        Company.hasOne(models.user, {
+            foreignKey: 'companyId',
+            targetKey: 'id',
+        })
+    }
 
     return Company
 }

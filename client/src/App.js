@@ -12,6 +12,7 @@ import PrivateRoute from "./routes/privateRoute";
 import PublicRoutes from "./routes/publicRoutes";
 import PrivateRoutes from "./routes/privateRoutes";
 import SignUp from "./Pages/signUp/signup";
+import GoogleAuthRedirect from "./Pages/googleRedirect/GoogleRedirect";
 
 function App() {
   return (
@@ -20,6 +21,10 @@ function App() {
         <Routes>
           <Route path="/" element={<PublicRoutes Component={Login} />} />
           <Route path="/signup" element={<PublicRoutes Component={SignUp} />} />
+          <Route
+            path="/redirect"
+            element={<PublicRoutes Component={GoogleAuthRedirect} />}
+          />
           <Route element={<PrivateRoutes />}>
             <Route
               path="/dashboard"
