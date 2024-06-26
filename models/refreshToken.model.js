@@ -1,14 +1,19 @@
+'use strict'
 const config = require('../config/auth.config')
 const { v4: uuidv4 } = require('uuid')
 
-module.exports = (sequelize, Sequelize) => {
+// const sequelizePaginate = require('sequelize-paginate')
+module.exports = (sequelize, DataTypes) => {
     const RefreshToken = sequelize.define('refreshToken', {
-        token: {
-            type: Sequelize.STRING,
+        id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+            allowNull: false,
         },
-        expiryDate: {
-            type: Sequelize.DATE,
-        },
+        token: DataTypes.STRING,
+        expiryDate: DataTypes.DATE,
+        userId: DataTypes.INTEGER,
     })
 
     RefreshToken.createToken = async function (user) {
@@ -33,5 +38,11 @@ module.exports = (sequelize, Sequelize) => {
         return token.expiryDate.getTime() < new Date().getTime()
     }
 
+    RefreshToken.associate = function (models) {
+        RefreshToken.belongsTo(models.user, {
+            foreignKey: 'userId',
+            targetKey: 'id',
+        })
+    }
     return RefreshToken
 }

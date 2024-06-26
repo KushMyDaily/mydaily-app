@@ -17,7 +17,8 @@
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
     "no-console": 0,
-    "no-debugger": "off"
+    "no-debugger": "off",
+    "prettier/prettier": ["error", { "endOfLine": "auto" }]
   },
   "ignorePatterns": ["public/*"]
 }

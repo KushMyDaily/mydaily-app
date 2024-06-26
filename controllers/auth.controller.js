@@ -11,40 +11,46 @@ const Op = db.Sequelize.Op
 
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
+const { slackApp } = require('../connectors/slack')
 
 exports.signup = async (req, res) => {
     // Save User to Database
     const companyId = await getCompanyId(req)
-
-    User.create({
-        username: req.body.username,
-        email: req.body.email,
-        password: bcrypt.hashSync(req.body.password, 8),
-        companyId: companyId,
-    })
-        .then((user) => {
+    const slackId = await getSlackId(req)
+    try {
+        const newUser = await User.create({
+            username: req.body.username,
+            email: req.body.email,
+            password: bcrypt.hashSync(req.body.password, 8),
+            companyId: companyId,
+            slackId: slackId,
+        })
+        if (newUser) {
             if (req.body.roles) {
-                Role.findAll({
+                await Role.findAll({
                     where: {
                         name: {
                             [Op.or]: req.body.roles,
                         },
                     },
                 }).then((roles) => {
-                    user.setRoles(roles).then(() => {
+                    newUser.setRoles(roles).then(() => {
                         res.send({ message: 'User registered successfully!' })
                     })
                 })
             } else {
                 // user role = 1
-                user.setRoles([1]).then(() => {
+                await newUser.setRoles([1]).then(() => {
                     res.send({ message: 'User registered successfully!' })
                 })
             }
-        })
-        .catch((err) => {
-            res.status(500).send({ message: err.message })
-        })
+        } else {
+            console.log(user)
+            res.status(500).send({ message: error.message })
+        }
+    } catch (error) {
+        res.status(500).send({ message: error.message })
+    }
 }
 
 exports.signin = (req, res) => {
@@ -165,4 +171,19 @@ const getCompanyId = async (req) => {
             })
         return companyId
     }
+}
+
+const getSlackId = async (req) => {
+    let salckId = null
+    await slackApp.client.users
+        .lookupByEmail({
+            email: req.body.email,
+        })
+        .then((slackuser) => {
+            salckId = slackuser.user?.id
+        })
+        .catch((error) => {
+            salckId = null
+        })
+    return salckId
 }

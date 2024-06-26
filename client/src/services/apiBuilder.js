@@ -5,10 +5,8 @@ import {
   signOutUser,
 } from "../redux/features/signin/signinThunk";
 
-const baseURL = "http://13.43.110.169:3001";
-
 export const API = axios.create({
-  baseURL: baseURL,
+  baseURL: process.env.REACT_APP_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
     // "x-access-token": storedAccessToken,
