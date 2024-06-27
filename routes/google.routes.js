@@ -11,18 +11,18 @@ module.exports = function (app) {
     })
 
     app.post(
-        '/google/auth',
+        '/api/google/auth',
         // [authJwt.verifyToken],
         controller.generateAuthorizationUrl
     )
     app.get(
-        '/redirect',
+        '/api/redirect',
         // [authJwt.verifyToken],
         controller.redirect
     )
 
     app.post(
-        '/google/calendarevent',
+        '/api/google/calendarevent',
         [authJwt.verifyToken],
         controller.getCalendarEvent
     )
