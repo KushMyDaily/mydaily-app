@@ -5,7 +5,7 @@ const { googleAuth: GoogleAuth } = db
 const oAuth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `${process.env.URL_LOCAL}/api/redirect`
+    `${process.env.URL_LOCAL}/redirect`
 )
 
 const calendar = google.calendar({

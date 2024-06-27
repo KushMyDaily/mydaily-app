@@ -18,7 +18,7 @@ function GoogleRedirect() {
 
     if (code) {
       // Construct the new URL with the extracted parameter
-      const url = `${process.env.API_BASE_URL}/redirect?code=${code}&user=${userId}`;
+      const url = `${process.env.REACT_APP_API_BASE_URL}/redirect?code=${code}&user=${userId}`;
 
       // Fetch data from the new URL
       axios
