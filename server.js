@@ -158,7 +158,7 @@ require('./routes/user.routes')(app)
 require('./routes/google.routes')(app)
 require('./routes/stat.routes')(app)
 
-app.get('/api/users', (req, res) => {
+app.get('/users', (req, res) => {
     runSurvey()
     return res.json('user')
 })

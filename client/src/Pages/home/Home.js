@@ -734,7 +734,7 @@ function Home() {
   const onClickHandler = async () => {
     let storedAccessToken = JSON.parse(localStorage.getItem("accessToken"));
     try {
-      await API.get("/api/test/all", {
+      await API.get("/test/all", {
         headers: { "x-access-token": storedAccessToken },
       });
     } catch (error) {

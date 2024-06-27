@@ -7,7 +7,7 @@ export const signupUser = createAsyncThunk(
   async (userData, { dispatch }) => {
     dispatch(signupRequest());
     try {
-      const response = await API.post("/api/auth/signup", userData);
+      const response = await API.post("/auth/signup", userData);
       dispatch(signupSuccess(response.data));
     } catch (error) {
       dispatch(signupFailure(error.response?.data?.message));
