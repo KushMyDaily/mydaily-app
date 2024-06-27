@@ -11,7 +11,7 @@ module.exports = function (app) {
     })
 
     app.post(
-        '/api/auth',
+        '/google/auth',
         // [authJwt.verifyToken],
         controller.generateAuthorizationUrl
     )
@@ -22,7 +22,7 @@ module.exports = function (app) {
     )
 
     app.post(
-        '/api/google/calendarevent',
+        '/google/calendarevent',
         [authJwt.verifyToken],
         controller.getCalendarEvent
     )

@@ -6,7 +6,7 @@ export const google = createAsyncThunk(
   `google/signin`,
   async (userId, { dispatch }) => {
     try {
-      const response = await API.post("/api/auth/", userId);
+      const response = await API.post("/google/auth/", userId);
       dispatch(googleSuccess(response.data));
     } catch (error) {
       dispatch(googleFailure(error.response.data.message));
