@@ -66,7 +66,7 @@ app.get('/api', (req, res) => {
     res.json({ message: 'Welcome to ItsMyDaily application.' })
 })
 
-app.get('/slack/install', async (req, res, next) => {
+app.get('/api/slack/install', async (req, res, next) => {
     await installer.handleInstallPath(
         req,
         res,
@@ -88,7 +88,7 @@ const callbackOptions = {
     },
 }
 
-app.get('/slack/oauth_redirect', async (req, res) => {
+app.get('/api/slack/oauth_redirect', async (req, res) => {
     await installer.handleCallback(req, res, callbackOptions)
 })
 
