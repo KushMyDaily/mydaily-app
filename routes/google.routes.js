@@ -11,12 +11,12 @@ module.exports = function (app) {
     })
 
     app.post(
-        '/api/auth',
+        '/api/google/auth',
         // [authJwt.verifyToken],
         controller.generateAuthorizationUrl
     )
     app.get(
-        '/redirect',
+        '/api/redirect',
         // [authJwt.verifyToken],
         controller.redirect
     )

@@ -92,11 +92,6 @@ app.get('/slack/oauth_redirect', async (req, res) => {
     await installer.handleCallback(req, res, callbackOptions)
 })
 
-// slackApp.use(async ({ payload, next }) => {
-//     console.log('Incoming request:', payload)
-//     await next()
-// })
-
 // Middleware
 const loggingMiddleware = require('./middleware/logging')
 slackApp.use(loggingMiddleware)
