@@ -12,14 +12,17 @@ const googleSlice = createSlice({
   reducers: {
     googleRequest: (state) => {
       state.isLoading = true;
+      state.url = null;
       state.error = null;
     },
     googleSuccess: (state, action) => {
       state.isLoading = false;
       state.url = action.payload;
+      state.error = null;
     },
     googleFailure: (state, action) => {
       state.isLoading = false;
+      state.url = null;
       state.error = action.payload;
     },
   },

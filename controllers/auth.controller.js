@@ -88,9 +88,17 @@ exports.signin = (req, res) => {
                     authorities.push('ROLE_' + roles[i].name.toUpperCase())
                 }
 
+                const userData = {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    companyId: user.companyId,
+                    workspaceUserIds: user.workspaceUserIds,
+                }
+
                 res.status(200).send({
                     id: user.id,
-                    user: user,
+                    user: userData,
                     roles: authorities,
                     accessToken: token,
                     refreshToken: refreshToken,
