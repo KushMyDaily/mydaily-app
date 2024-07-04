@@ -81,10 +81,48 @@ app.get('/slack/install', async (req, res, next) => {
 
 const callbackOptions = {
     success: (installation, installOptions, req, res) => {
-        res.send('successful!')
+        const htmlResponse = `<html>
+            <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+            <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+            <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+            <!------ Include the above in your HEAD tag ---------->
+
+            <div class="container">
+                <div class="row text-center">
+                    <div class="col-sm-6 col-sm-offset-3">
+                    <br><br> <h2 style="color:#0fad00">Success !</h2>
+                    <p style="font-size:20px;color:#5C5C5C;">You have successfully authenticated with Mydaily MVP app.  </p>
+                    <a href="${process.env.URL_LOCAL}/settings" class="btn btn-success">     Go Back    </a>
+                <br><br>
+                    </div>
+                    
+                </div>
+            </div>
+        </html>`
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+        res.end(htmlResponse)
     },
     failure: (error, installOptions, req, res) => {
-        res.send('failure')
+        const htmlResponse = `<html>
+            <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+            <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+            <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+            <!------ Include the above in your HEAD tag ---------->
+
+            <div class="container">
+                <div class="row text-center">
+                    <div class="col-sm-6 col-sm-offset-3">
+                    <br><br> <h2 style="color:#eb4934">Oops... Failed!</h2>
+                    <p style="font-size:20px;color:#5C5C5C;">Something Went Wrong! Please Try Again or Contact the App Owner.</p>
+                    <a href="${process.env.URL_LOCAL}/settings" class="btn btn-danger">     Go Back    </a>
+                <br><br>
+                    </div>
+                    
+                </div>
+            </div>
+        </html>`
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+        res.end(htmlResponse)
     },
 }
 

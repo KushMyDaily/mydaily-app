@@ -65,8 +65,8 @@ function Settings() {
   //   // setUser(userObject)
   // }
 
-  const getCode = async () => {
-    await dispatch(google({ userId: user.id }));
+  const getCode = () => {
+    dispatch(google({ userId: user.id }));
   };
 
   // function getTokens(response) {
