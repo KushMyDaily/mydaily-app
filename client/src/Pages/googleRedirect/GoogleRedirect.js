@@ -68,7 +68,7 @@ function GoogleRedirect() {
     <Box bg="#ab5dd9" pb={8} align="center" height="100vh">
       {data.status === 200 && (
         <Heading color="brand.text" fontFamily="heading" py={8}>
-          {user?.username}
+          Hello {user?.username}
         </Heading>
       )}
       <Card maxW={80} align="center">

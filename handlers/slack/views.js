@@ -45,7 +45,7 @@ module.exports = (slackApp) => {
 
         try {
             await slackApp.client.chat.update({
-                channel: user.userId,
+                channel: user.channelId,
                 ts: user.postedTimestamp,
                 blocks: [
                     {
