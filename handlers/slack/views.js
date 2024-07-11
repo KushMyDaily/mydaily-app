@@ -1,4 +1,6 @@
 const db = require('../../models')
+const { WebClient } = require('@slack/web-api')
+const SlackService = require('../../service/slack.service')
 
 const {
     survey: Survey,
@@ -6,6 +8,8 @@ const {
     surveyAnswer: SurveyAnswer,
     workspaceUser: WorkspaceUser,
 } = db
+const webClient = new WebClient()
+const slackService = new SlackService()
 
 module.exports = (slackApp) => {
     slackApp.view('view_1', async ({ body, ack, payload }) => {
@@ -44,7 +48,17 @@ module.exports = (slackApp) => {
         }
 
         try {
-            await slackApp.client.chat.update({
+            let token
+            await slackService
+                .authorize(user.teamId)
+                .then((res) => {
+                    token = res.botToken
+                })
+                .catch((err) => {
+                    throw new Error('Failed authorize token', err)
+                })
+            await webClient.chat.update({
+                token: token,
                 channel: user.channelId,
                 ts: user.postedTimestamp,
                 blocks: [
