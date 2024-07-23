@@ -1,4 +1,4 @@
-const { authJwt } = require('../middleware')
+const { authJwt, googleJwt } = require('../middleware')
 const controller = require('../controllers/google.controller')
 
 module.exports = function (app) {
@@ -25,5 +25,11 @@ module.exports = function (app) {
         '/api/google/calendarevent',
         [authJwt.verifyToken],
         controller.getCalendarEvent
+    )
+
+    app.post(
+        '/api/google/messages',
+        [googleJwt.checkAndRefreshToken],
+        controller.getMessageList
     )
 }

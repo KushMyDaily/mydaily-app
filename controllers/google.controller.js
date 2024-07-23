@@ -13,7 +13,11 @@ const calendar = google.calendar({
     auth: process.env.GOOGLE_AUTH,
 })
 
-const scopes = ['https://www.googleapis.com/auth/calendar']
+const scopes = [
+    'https://www.googleapis.com/auth/calendar',
+    'https://mail.google.com/',
+    'https://www.googleapis.com/auth/gmail.compose',
+]
 
 /**
  * Reads previously authorized credentials from the save file.
@@ -34,7 +38,7 @@ async function loadSavedCredentialsIfExist(userId) {
     }
 }
 
-async function saveCredentials(token, user) {
+exports.saveCredentials = async (token, user) => {
     const userId = Number(user)
     try {
         const googleAuthToken = await GoogleAuth.create({
@@ -43,6 +47,27 @@ async function saveCredentials(token, user) {
             expiryDate: token.expiry_date,
             userId: userId,
         })
+        return googleAuthToken
+    } catch (error) {
+        return error
+    }
+}
+
+exports.updateCredentials = async (token, user) => {
+    const userId = Number(user)
+    try {
+        const googleAuthToken = await GoogleAuth.update(
+            {
+                accessToken: token.access_token,
+                refreshToken: token.refresh_token,
+                expiryDate: token.expiry_date,
+            },
+            {
+                where: {
+                    userId: userId,
+                },
+            }
+        )
         return googleAuthToken
     } catch (error) {
         return error
@@ -60,7 +85,7 @@ exports.generateAuthorizationUrl = async (req, res) => {
     const authorizationUrl = oAuth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: scopes,
-        include_granted_scopes: true,
+        prompt: 'consent',
     })
 
     let user = await loadSavedCredentialsIfExist(userId)
@@ -117,6 +142,23 @@ exports.getCalendarEvent = async (req, res, next) => {
         }
 
         res.send({ data: events })
+    } catch (error) {
+        res.send({ error: error.message })
+    }
+}
+
+exports.getMessageList = async (req, res, next) => {
+    try {
+        const { userId, maxResults, labelIds } = req.body
+
+        const gmail = google.gmail({ version: 'v1', auth: req.oauth2Client })
+
+        const res = await gmail.users.messages.list({
+            userId: userId,
+            maxResults: maxResults,
+            labelIds: labelIds,
+        })
+        const messages = res.data.messages
     } catch (error) {
         res.send({ error: error.message })
     }
