@@ -38,7 +38,7 @@ async function loadSavedCredentialsIfExist(userId) {
     }
 }
 
-exports.saveCredentials = async (token, user) => {
+async function saveCredentials(token, user) {
     const userId = Number(user)
     try {
         const googleAuthToken = await GoogleAuth.create({
@@ -158,7 +158,7 @@ exports.getMessageList = async (req, res, next) => {
             maxResults: maxResults,
             labelIds: labelIds,
         })
-        const messages = res.data.messages
+        res.send({ data: res.data })
     } catch (error) {
         res.send({ error: error.message })
     }
