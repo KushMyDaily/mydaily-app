@@ -16,7 +16,8 @@ const calendar = google.calendar({
 const scopes = [
     'https://www.googleapis.com/auth/calendar',
     'https://mail.google.com/',
-    'https://www.googleapis.com/auth/gmail.compose',
+    'https://www.googleapis.com/auth/gmail.modify',
+    'https://www.googleapis.com/auth/gmail.readonly',
 ]
 
 /**
@@ -154,10 +155,11 @@ exports.getMessageList = async (req, res, next) => {
         const gmail = google.gmail({ version: 'v1', auth: req.oauth2Client })
 
         const res = await gmail.users.messages.list({
-            userId: userId,
-            maxResults: maxResults,
-            labelIds: labelIds,
+            userId: 'me',
+            //maxResults: maxResults,
+            //labelIds: labelIds,
         })
+
         res.send({ data: res.data })
     } catch (error) {
         res.send({ error: error.message })
