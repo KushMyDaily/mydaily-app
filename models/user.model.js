@@ -35,6 +35,20 @@ module.exports = (sequelize, DataTypes) => {
         //     foreignKey: 'userId',
         //     targetKey: 'id',
         // })
+        // Self-referencing many-to-many relationship
+        User.belongsToMany(User, {
+            as: 'Managers',
+            through: 'user_managers',
+            foreignKey: 'userId',
+            otherKey: 'managerId',
+        })
+
+        User.belongsToMany(User, {
+            as: 'Subordinates',
+            through: 'user_managers',
+            foreignKey: 'managerId',
+            otherKey: 'userId',
+        })
     }
     return User
 }

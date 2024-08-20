@@ -42,6 +42,16 @@ db.googleAuth = require('../models/googleAuthentication.modal.js')(
     sequelize,
     Sequelize
 )
+db.workload = require('../models/workload.modal.js')(sequelize, Sequelize)
+db.relationship = require('../models/relationships.modal.js')(
+    sequelize,
+    Sequelize
+)
+db.timeBoundaries = require('../models/timeboundaries.modal.js')(
+    sequelize,
+    Sequelize
+)
+db.autonomy = require('../models/autonomys.model.js')(sequelize, Sequelize)
 
 ///////////////////////////////////////////////////////////////
 

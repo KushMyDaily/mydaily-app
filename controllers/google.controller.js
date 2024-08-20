@@ -1,6 +1,10 @@
 const { google } = require('googleapis')
 const db = require('../models')
+const { checkAndRefreshToken } = require('../middleware/googleToken')
+const GoogleService = require('../service/google.service')
 const { googleAuth: GoogleAuth } = db
+
+const googleService = new GoogleService()
 
 const oAuth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -120,48 +124,97 @@ exports.redirect = async (req, res) => {
     }
 }
 
-exports.getCalendarEvent = async (req, res, next) => {
+exports.getDailyMessageCount = async (userId, labelIds, query) => {
     try {
-        const { refreshToken } = req.body
-
-        oAuth2Client.setCredentials({
-            refresh_token: refreshToken,
-        })
-
-        const response = await calendar.events.list({
-            auth: oAuth2Client,
-            calendarId: 'primary',
-            timeMin: new Date().toISOString(),
-            maxResults: 10,
-            singleEvents: true,
-            orderBy: 'startTime',
-        })
-        const events = response.data.items
-        if (!events || events.length === 0) {
-            console.log('No upcoming events found.')
-            return
+        const oauth2Client = await checkAndRefreshToken(userId)
+        if (oauth2Client) {
+            const maxResults = 500
+            const response = await googleService.getMessageList(
+                oauth2Client,
+                maxResults,
+                labelIds,
+                query
+            )
+            if (response?.data) {
+                return response?.data
+            }
         }
-
-        res.send({ data: events })
     } catch (error) {
-        res.send({ error: error.message })
+        console.log('getDailyMessageCount error', error)
     }
 }
 
-exports.getMessageList = async (req, res, next) => {
+exports.getDailyCalendarEvent = async (userId, timeMin, timeMax) => {
     try {
-        const { userId, maxResults, labelIds } = req.body
-
-        const gmail = google.gmail({ version: 'v1', auth: req.oauth2Client })
-
-        const res = await gmail.users.messages.list({
-            userId: 'me',
-            //maxResults: maxResults,
-            //labelIds: labelIds,
-        })
-
-        res.send({ data: res.data })
+        const oauth2Client = await checkAndRefreshToken(userId)
+        if (oauth2Client) {
+            const response = await googleService.getCalendorEvent(
+                oauth2Client,
+                timeMin,
+                timeMax
+            )
+            if (response?.data) {
+                return response?.data?.items
+            }
+            console.log('message response', response)
+        }
     } catch (error) {
-        res.send({ error: error.message })
+        console.log('getDailyCalendarEvent error', error)
+    }
+}
+
+exports.getDailyMessageDetails = async (userId, labelIds, query) => {
+    try {
+        const oauth2Client = await checkAndRefreshToken(userId)
+        if (oauth2Client) {
+            const maxResults = 500
+            const response = await googleService.getMessageList(
+                oauth2Client,
+                maxResults,
+                labelIds,
+                query
+            )
+            if (response?.data.messages && response?.data.messages.length > 0) {
+                const messages = response.data.messages
+                // return response?.data
+
+                // Use Promise.all to handle async operations
+                const dailyMessages = await Promise.all(
+                    messages.map(async (message) => {
+                        const messageResponse = await googleService.getMessage(
+                            oauth2Client,
+                            message.id
+                        )
+                        return messageResponse.data
+                    })
+                )
+
+                return dailyMessages
+            }
+        }
+    } catch (error) {
+        console.log('getDailyMessageCount error', error)
+        return []
+    }
+}
+
+exports.getEmailThreads = async (userId, labelIds, query) => {
+    try {
+        const oauth2Client = await checkAndRefreshToken(userId)
+        if (oauth2Client) {
+            const maxResults = 500
+            const response = await googleService.getThreadsList(
+                oauth2Client,
+                maxResults,
+                labelIds,
+                query
+            )
+            if (response?.data) {
+                return response?.data
+            }
+        }
+    } catch (error) {
+        console.log('getEmailThreads error', error)
+        return []
     }
 }
