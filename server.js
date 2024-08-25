@@ -8,6 +8,17 @@ dotenv.config()
 
 const { slackApp, installer } = require('./connectors/slack')
 const { runSurvey } = require('./controllers/slack.controller')
+const { storeDailyWorkloadStats } = require('./controllers/workload.controller')
+const {
+    storeReleationshipsStats,
+} = require('./controllers/relationships.controller')
+const {
+    storetimeBoundariesStats,
+} = require('./controllers/timeBoundaries.controller')
+const { storeAutonomyStats } = require('./controllers/autonomy.controller')
+const {
+    storeCommunicationStats,
+} = require('./controllers/communications.controller')
 
 const app = express()
 
@@ -151,6 +162,10 @@ app.get('/api/users', (req, res) => {
     runSurvey()
     return res.json('user')
 })
+app.get('/api/calculations', (req, res) => {
+    executeCalculationSequentially()
+    return res.json('calculation')
+})
 ;(async () => {
     // Start your app
     await slackApp.start()
@@ -166,6 +181,18 @@ cron.schedule('0 24 18 * * *', () => {
     // Call the controller method directly
     runSurvey()
 })
+
+async function executeCalculationSequentially() {
+    try {
+        await storeDailyWorkloadStats()
+        await storeReleationshipsStats()
+        await storetimeBoundariesStats()
+        await storeAutonomyStats()
+        await storeCommunicationStats()
+    } catch (error) {
+        console.error('An error occurred:', error)
+    }
+}
 
 // eslint-disable-next-line no-console
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`))

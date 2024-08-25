@@ -49,7 +49,7 @@ const ranges = {
 
 const scores = [10, 8, 6, 4, 2, 0]
 
-exports.storeDailyReleationshipsStats = async () => {
+exports.storeReleationshipsStats = async () => {
     try {
         const googleUsers = await GoogleAuth.findAll()
 
@@ -94,20 +94,27 @@ exports.storeDailyReleationshipsStats = async () => {
                     oneToOneManager,
                     numberOfEmailRecipients,
                 ]).then(async (result) => {
-                    const dailyRelationshipScore =
+                    const relationshipScore =
                         await calculateRelationshipScore(result)
-                    console.log(result)
-                    console.log(dailyRelationshipScore)
+                    console.log(
+                        '==============================================='
+                    )
+                    console.log('=== user', user.userId)
+                    console.log('=== Relationship result', result)
+                    console.log('=== Relationship score', relationshipScore)
+                    console.log(
+                        '==============================================='
+                    )
 
-                    const dailyRelationshipStat = await Relationship.create({
+                    const relationshipStat = await Relationship.create({
                         meetingAttendees: result[0],
                         oneToOneManager: result[1],
                         emailRecipients: result[2],
-                        relationshipScore: dailyRelationshipScore,
+                        relationshipScore: relationshipScore,
                         userId: user.userId,
                     })
 
-                    return dailyRelationshipStat
+                    return relationshipStat
                 })
             })
         }

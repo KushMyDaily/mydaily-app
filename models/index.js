@@ -52,6 +52,10 @@ db.timeBoundaries = require('../models/timeboundaries.modal.js')(
     Sequelize
 )
 db.autonomy = require('../models/autonomys.model.js')(sequelize, Sequelize)
+db.communications = require('../models/communications.modal.js')(
+    sequelize,
+    Sequelize
+)
 
 ///////////////////////////////////////////////////////////////
 

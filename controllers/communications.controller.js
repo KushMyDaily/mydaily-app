@@ -1,6 +1,6 @@
 const db = require('../models')
 const GoogleController = require('./google.controller')
-const { googleAuth: GoogleAuth, autonomy: Autonomy } = db
+const { googleAuth: GoogleAuth, communications: Communications } = db
 const moment = require('moment')
 
 const emailLabel = Object.freeze({
@@ -12,36 +12,35 @@ const emailLabel = Object.freeze({
     IMPORTANT: 'IMPORTANT',
     SENT: 'SENT',
     DRAFT: 'DRAFT',
-    ALL: [],
 })
 
 const weights = {
-    eventCreatedByUser: 0.6,
-    initiatedEmailThreads: 0.4,
+    sharedCalendarEvent: 0.75,
+    sendMailFrequency: 0.25,
 }
 
 const ranges = {
-    eventCreatedByUser: [
-        [15, Infinity],
-        [12, 14],
-        [9, 11],
-        [6, 8],
-        [3, 5],
-        [0, 2],
+    sharedCalendarEvent: [
+        [10, Infinity],
+        [8, 9],
+        [6, 7],
+        [4, 5],
+        [2, 3],
+        [0, 1],
     ],
-    initiatedEmailThreads: [
-        [26, Infinity],
-        [21, 25],
-        [16, 20],
-        [11, 15],
-        [6, 10],
-        [0, 2],
+    sendMailFrequency: [
+        [9, 10],
+        [7, 8],
+        [5, 6],
+        [3, 4],
+        [1, 2],
+        [0, 0],
     ],
 }
 
 const scores = [10, 8, 6, 4, 2, 0]
 
-exports.storeAutonomyStats = async () => {
+exports.storeCommunicationStats = async () => {
     try {
         const googleUsers = await GoogleAuth.findAll()
 
@@ -49,20 +48,18 @@ exports.storeAutonomyStats = async () => {
             console.log('no google users found')
         } else {
             googleUsers.forEach(async (user) => {
-                const noOfeventCreatedByUser = new Promise(
+                const numberOfSharedEvents = new Promise((resolve, reject) => {
+                    eventAttendeesList(user.userId)
+                        .then((res) => {
+                            resolve(res)
+                        })
+                        .catch((err) => {
+                            reject(err)
+                        })
+                })
+                const numberOfSentMailFrequency = new Promise(
                     (resolve, reject) => {
-                        eventCreatedByUser(user.userId)
-                            .then((res) => {
-                                resolve(res)
-                            })
-                            .catch((err) => {
-                                reject(err)
-                            })
-                    }
-                )
-                const noOfinitiatedEmailThreads = new Promise(
-                    (resolve, reject) => {
-                        initiatedEmailThreads(user.userId, emailLabel.ALL)
+                        emailRecipients(user.userId, emailLabel.SENT)
                             .then((res) => {
                                 resolve(res)
                             })
@@ -73,34 +70,34 @@ exports.storeAutonomyStats = async () => {
                 )
                 Promise.all([
                     // keep specific order
-                    noOfeventCreatedByUser,
-                    noOfinitiatedEmailThreads,
+                    numberOfSharedEvents,
+                    numberOfSentMailFrequency,
                 ]).then(async (result) => {
-                    const autonomyScore = await calculateAutonomyScore(result)
-
+                    const communicationScore =
+                        await calculateCommunicationScore(result)
                     console.log(
                         '==============================================='
                     )
                     console.log('=== user', user.userId)
-                    console.log('=== Autonomy result', result)
-                    console.log('=== Autonomy score', autonomyScore)
+                    console.log('=== Communication result', result)
+                    console.log('=== Communication score', communicationScore)
                     console.log(
                         '==============================================='
                     )
 
-                    const autonomyStat = await Autonomy.create({
-                        eventCreatedByUser: result[0],
-                        initiatedEmailThreads: result[1],
-                        autonomyScore: autonomyScore,
+                    const communicationStat = await Communications.create({
+                        sharedCalendarEvent: result[0],
+                        sendMailFrequency: result[1],
+                        communicationScore: communicationScore,
                         userId: user.userId,
                     })
 
-                    return autonomyStat
+                    return communicationStat
                 })
             })
         }
     } catch (error) {
-        console.log('Autonomy stat issue ', error)
+        console.log('communication stat issue ', error)
     }
 }
 
@@ -114,8 +111,8 @@ function getScore(value, category) {
     return 0
 }
 
-async function calculateAutonomyScore(stats) {
-    const categories = ['eventCreatedByUser', 'initiatedEmailThreads']
+async function calculateCommunicationScore(stats) {
+    const categories = ['sharedCalendarEvent', 'sendMailFrequency']
     const score = categories.reduce((totalScore, category, index) => {
         const statScore = getScore(stats[index], category)
         return totalScore + statScore * weights[category]
@@ -124,10 +121,10 @@ async function calculateAutonomyScore(stats) {
     return roundedScore
 }
 
-async function eventCreatedByUser(userId) {
-    const lastFiveWorkingDays = getLastWorkingDays(20)
+async function eventAttendeesList(userId) {
+    const lastFiveWorkingDays = getLastWorkingDays(5)
     const start = lastFiveWorkingDays[0].startDate
-    const end = lastFiveWorkingDays[19].endDate
+    const end = lastFiveWorkingDays[4].endDate
 
     try {
         const getDailyEvents = await GoogleController.getDailyCalendarEvent(
@@ -140,9 +137,9 @@ async function eventCreatedByUser(userId) {
             return 0
         }
 
-        const eventCreatedByUserCount = getDailyEvents.reduce(
+        const eventAttendeesCount = getDailyEvents.reduce(
             (accumulator, event) => {
-                if (event?.creator && event?.creator?.self) {
+                if (event?.attendees?.length > 1) {
                     accumulator = accumulator + 1
                 }
                 return accumulator
@@ -150,29 +147,42 @@ async function eventCreatedByUser(userId) {
             0
         )
 
-        return eventCreatedByUserCount || 0
+        return eventAttendeesCount
     } catch (error) {
-        console.error('Error fetching eventCreatedByUser:', error)
+        console.error('Error fetching eventAttendeesList', error)
         return 0
     }
 }
 
-async function initiatedEmailThreads(userId, labelId) {
-    const lastFiveWorkingDays = getLastWorkingDays(20)
+async function emailRecipients(userId, labelId) {
+    const lastFiveWorkingDays = getLastWorkingDays(5)
     const start = moment(lastFiveWorkingDays[0].startDate).unix()
-    const end = moment(lastFiveWorkingDays[19].endDate).unix()
+    const end = moment(lastFiveWorkingDays[4].endDate).unix()
 
-    const query = `after:${start} before:${end} from:me`
-
+    const query = `after:${start} before:${end}`
     try {
-        const getLastWorkingDaysThreads =
-            await GoogleController.getEmailThreads(userId, labelId, query)
+        const getSendMessageDetails =
+            await GoogleController.getDailyMessageDetails(
+                userId,
+                labelId,
+                query
+            )
 
-        const initiatedEmailThreadsCount =
-            getLastWorkingDaysThreads?.resultSizeEstimate || 0
-        return initiatedEmailThreadsCount
+        if (getSendMessageDetails) {
+            const filteredRecipients = getSendMessageDetails.reduce(
+                (accumulator, message) => {
+                    if (message) {
+                        accumulator = accumulator + 1
+                    }
+                    return accumulator
+                },
+                0
+            )
+            return filteredRecipients
+        }
+        return 0
     } catch (error) {
-        console.log('getEmailOutsideHours error', error)
+        console.log('getDailyEmailRecipient error', error)
         return 0
     }
 }

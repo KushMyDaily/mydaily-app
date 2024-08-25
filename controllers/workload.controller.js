@@ -132,12 +132,23 @@ exports.storeDailyWorkloadStats = async () => {
                     unreadMessages,
                     importantMessages,
                 ]).then(async (result) => {
-                    console.log(result)
                     if (result) {
                         const dailyWorkloadScore =
                             await calculateWorkloadScore(result)
 
-                        console.log(dailyWorkloadScore)
+                        console.log(
+                            '==============================================='
+                        )
+                        console.log('=== user', user.userId)
+                        console.log('=== Daily work load result', result)
+                        console.log(
+                            '=== Daily work load score',
+                            dailyWorkloadScore
+                        )
+                        console.log(
+                            '==============================================='
+                        )
+
                         // console.log(
                         //     moment
                         //         .utc('2024-07-30 06:50:33')

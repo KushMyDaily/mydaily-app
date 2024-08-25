@@ -1,10 +1,6 @@
 const db = require('../models')
 const GoogleController = require('./google.controller')
-const {
-    googleAuth: GoogleAuth,
-    user: User,
-    timeBoundaries: TimeBoundaries,
-} = db
+const { googleAuth: GoogleAuth, timeBoundaries: TimeBoundaries } = db
 const moment = require('moment')
 
 const emailLabel = Object.freeze({
@@ -100,6 +96,16 @@ exports.storetimeBoundariesStats = async () => {
                 ]).then(async (result) => {
                     const timeBoundariesScore =
                         await calculateTimeBoundariesScore(result)
+                    console.log(
+                        '==============================================='
+                    )
+                    console.log('=== user', user.userId)
+                    console.log('=== TimeBoundaries result', result)
+                    console.log('=== TimeBoundaries score', timeBoundariesScore)
+                    console.log(
+                        '==============================================='
+                    )
+
                     const timeBoundariesStat = await TimeBoundaries.create({
                         outsideWorkHours: result[0],
                         conflictMeetings: result[1],
