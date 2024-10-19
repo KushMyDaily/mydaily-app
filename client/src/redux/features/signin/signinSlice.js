@@ -7,6 +7,9 @@ const initialState = {
   isAuthenticated: false,
   error: null,
   user: null,
+  isLoadingResetPassword: false,
+  resettedPassword: null,
+  errorResetPassword: null,
 };
 
 const signinSlice = createSlice({
@@ -81,6 +84,26 @@ const signinSlice = createSlice({
       localStorage.removeItem("isAuthenticated");
       state.isAuthenticated = false;
     },
+    clearResetPassword: (state) => {
+      state.isLoadingResetPassword = false;
+      state.resettedPassword = null;
+      state.errorResetPassword = null;
+    },
+    resetPasswordRequest: (state) => {
+      state.isLoadingResetPassword = true;
+      state.resettedPassword = null;
+      state.errorResetPassword = null;
+    },
+    resetPasswordSuccess: (state, action) => {
+      state.isLoadingResetPassword = false;
+      state.resettedPassword = action.payload;
+      state.errorResetPassword = null;
+    },
+    resetPasswordFailure: (state, action) => {
+      state.isLoadingResetPassword = false;
+      state.resettedPassword = null;
+      state.errorResetPassword = action.payload;
+    },
   },
 });
 
@@ -91,6 +114,10 @@ export const {
   logout,
   refreshTokensSuccess,
   refreshTokensFailure,
+  resetPasswordRequest,
+  resetPasswordSuccess,
+  resetPasswordFailure,
+  clearResetPassword,
 } = signinSlice.actions;
 
 export default signinSlice.reducer;

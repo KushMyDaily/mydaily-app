@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
             autoIncrement: true,
             allowNull: false,
         },
-        answers: DataTypes.TEXT,
+        answers: DataTypes.STRING,
         surveyId: DataTypes.INTEGER,
         userId: DataTypes.INTEGER,
     })

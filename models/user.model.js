@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         companyId: DataTypes.INTEGER,
         slackId: DataTypes.STRING,
         workspaceUserIds: DataTypes.STRING,
+        resetToken: DataTypes.STRING,
     })
 
     User.associate = function (models) {

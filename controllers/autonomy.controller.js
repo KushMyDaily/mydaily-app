@@ -168,9 +168,7 @@ async function initiatedEmailThreads(userId, labelId) {
         const getLastWorkingDaysThreads =
             await GoogleController.getEmailThreads(userId, labelId, query)
 
-        const initiatedEmailThreadsCount =
-            getLastWorkingDaysThreads?.resultSizeEstimate || 0
-        return initiatedEmailThreadsCount
+        return getLastWorkingDaysThreads || 0
     } catch (error) {
         console.log('getEmailOutsideHours error', error)
         return 0

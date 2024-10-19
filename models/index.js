@@ -56,6 +56,16 @@ db.communications = require('../models/communications.modal.js')(
     sequelize,
     Sequelize
 )
+db.factor = require('../models/factors.modal.js')(sequelize, Sequelize)
+db.dataPoints = require('../models/dataPoints.modal.js')(sequelize, Sequelize)
+db.scoreMapping = require('../models/scoreMapping.modal.js')(
+    sequelize,
+    Sequelize
+)
+db.statisticsByDate = require('./statisticsByDate.modal.js')(
+    sequelize,
+    Sequelize
+)
 
 ///////////////////////////////////////////////////////////////
 

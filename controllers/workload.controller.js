@@ -1,6 +1,11 @@
 const db = require('../models')
 const GoogleController = require('./google.controller')
-const { googleAuth: GoogleAuth, workload: Workload } = db
+const {
+    googleAuth: GoogleAuth,
+    workload: Workload,
+    surveyAnswer: SurveyAnswer,
+} = db
+const { Op, Sequelize } = require('sequelize')
 const moment = require('moment')
 
 const emailLabel = Object.freeze({
@@ -66,6 +71,11 @@ const ranges = {
 }
 
 const scores = [10, 8, 6, 4, 2, 0]
+
+const dailyAverageWeight = [
+    0.16, 0.14, 0.13, 0.12, 0.1, 0.08, 0.06, 0.05, 0.04, 0.03, 0.03, 0.02, 0.02,
+    0.01, 0.01,
+]
 
 exports.storeDailyWorkloadStats = async () => {
     try {
@@ -216,8 +226,8 @@ async function messageCount(userId, labelId) {
 }
 
 async function eventList(userId) {
-    const start = moment().startOf('day').toISOString()
-    const end = moment().endOf('day').toISOString()
+    const start = moment().utc().startOf('day').toISOString()
+    const end = moment().utc().endOf('day').toISOString()
 
     try {
         const getDailyEvents = await GoogleController.getDailyCalendarEvent(
@@ -253,8 +263,9 @@ async function eventList(userId) {
 }
 function queryGetDate() {
     // Get the start and end of the day using moment and convert to Unix timestamps directly
-    const startOfDayTimestamp = moment().startOf('day').unix()
-    const endOfDayTimestamp = moment().endOf('day').unix()
+
+    const startOfDayTimestamp = moment().local().startOf('day').unix()
+    const endOfDayTimestamp = moment().local().endOf('day').unix()
 
     // Formulate the query
     const query = `after:${startOfDayTimestamp} before:${endOfDayTimestamp}`

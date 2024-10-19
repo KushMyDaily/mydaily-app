@@ -25,4 +25,8 @@ module.exports = function (app) {
     app.post('/api/auth/refreshtoken', controller.refreshToken)
 
     app.post('/api/auth/signout', controller.signOut)
+
+    app.post('/api/auth/fogotPassword', controller.fogotPassword)
+
+    app.post('/auth/updatePassword/:token', controller.updatePassword)
 }

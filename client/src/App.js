@@ -13,6 +13,8 @@ import PublicRoutes from "./routes/publicRoutes";
 import PrivateRoutes from "./routes/privateRoutes";
 import SignUp from "./Pages/signUp/signup";
 import GoogleAuthRedirect from "./Pages/googleRedirect/GoogleRedirect";
+import FogotPassword from "./Pages/fogotPassword/fogotPassword";
+import ResetPassword from "./Pages/resetPassword/resetPassword";
 
 function App() {
   return (
@@ -21,6 +23,14 @@ function App() {
         <Routes>
           <Route path="/" element={<PublicRoutes Component={Login} />} />
           <Route path="/signup" element={<PublicRoutes Component={SignUp} />} />
+          <Route
+            path="/forgotPassword"
+            element={<PublicRoutes Component={FogotPassword} />}
+          />
+          <Route
+            path="/resetPassword/:token"
+            element={<PublicRoutes Component={ResetPassword} />}
+          />
           <Route
             path="/redirect"
             element={<PublicRoutes Component={GoogleAuthRedirect} />}

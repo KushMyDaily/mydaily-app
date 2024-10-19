@@ -6,6 +6,10 @@ import {
   refreshTokensSuccess,
   refreshTokensFailure,
   logout,
+  clearResetPassword,
+  resetPasswordSuccess,
+  resetPasswordFailure,
+  resetPasswordRequest,
 } from "./signinSlice";
 import { API } from "../../../services/apiBuilder";
 
@@ -44,5 +48,24 @@ export const signOutUser = createAsyncThunk(
       // eslint-disable-next-line no-console
       console.log(error);
     }
+  },
+);
+
+export const resetPassword = createAsyncThunk(
+  "signin/resetPassword",
+  async (email, { dispatch }) => {
+    dispatch(resetPasswordRequest());
+    try {
+      const response = await API.post("/api/auth/fogotPassword/", email);
+      dispatch(resetPasswordSuccess(response.data));
+    } catch (error) {
+      dispatch(resetPasswordFailure(error.response?.data?.message));
+    }
+  },
+);
+export const clearDataResetPassword = createAsyncThunk(
+  "signin/clearDataResetPassword",
+  async (_, { dispatch }) => {
+    dispatch(clearResetPassword());
   },
 );
