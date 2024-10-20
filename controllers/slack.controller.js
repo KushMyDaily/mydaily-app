@@ -1,11 +1,15 @@
 const db = require('../models')
-const { slackApp, installer } = require('../connectors/slack')
-const { SocketModeClient } = require('@slack/socket-mode')
 const { WebClient } = require('@slack/web-api')
 const SlackOAuthController = require('./slackOAuth.controller')
 const WorkspaceUserController = require('./workspaceUser.controller')
 const SlackService = require('../service/slack.service')
-const { slackOAuthAccess: SlackOAuthAccess, workspaceUser: WorkspaceUser } = db
+const {
+    slackOAuthAccess: SlackOAuthAccess,
+    workspaceUser: WorkspaceUser,
+    user: User,
+} = db
+
+const { Op, Sequelize } = db.Sequelize
 
 const slackService = new SlackService()
 const webClient = new WebClient()
@@ -31,76 +35,119 @@ exports.runSurvey = async () => {
                     })
 
                 if (oauth) {
-                    oauth.workspace_users.forEach(async (user) => {
-                        try {
-                            const postedResponse =
-                                await webClient.chat.postMessage({
-                                    token: token,
-                                    channel: await user.userId,
-                                    text: 'survey',
-                                    blocks: [
+                    const filtedWorkspaceUsers = await Promise.all(
+                        oauth.workspace_users.map(async (workspaceUser) => {
+                            const rows = await User.findAll({
+                                where: {
+                                    [Op.or]: [
+                                        { workspaceUserIds: workspaceUser.id }, // Check for equality with number
                                         {
-                                            type: 'header',
-                                            text: {
-                                                type: 'plain_text',
-                                                text: 'Hey :wave: !',
-                                                emoji: true,
-                                            },
-                                        },
-                                        {
-                                            type: 'divider',
-                                        },
-                                        {
-                                            type: 'section',
-                                            text: {
-                                                type: 'plain_text',
-                                                text: 'Please take a time to fill today survey.',
-                                                emoji: true,
-                                            },
-                                        },
-                                        {
-                                            type: 'actions',
-                                            elements: [
+                                            // Check if the column is not null and not empty
+                                            [Op.and]: [
                                                 {
-                                                    type: 'button',
-                                                    text: {
-                                                        type: 'plain_text',
-                                                        text: 'Open survey',
-                                                        emoji: true,
+                                                    workspaceUserIds: {
+                                                        [Op.ne]: null,
                                                     },
-                                                    value: 'click_me_123',
-                                                    action_id: 'actionId-0',
-                                                },
+                                                }, // Ensure it's not null
+                                                {
+                                                    workspaceUserIds: {
+                                                        [Op.ne]: '',
+                                                    },
+                                                }, // Ensure it's not empty
+                                                Sequelize.where(
+                                                    Sequelize.fn(
+                                                        'JSON_CONTAINS',
+                                                        Sequelize.col(
+                                                            'workspaceUserIds'
+                                                        ),
+                                                        JSON.stringify([
+                                                            workspaceUser.id,
+                                                        ])
+                                                    ),
+                                                    true
+                                                ),
                                             ],
                                         },
                                     ],
-                                })
+                                },
+                            })
+                            // Return the workspaceUser if rows.length > 0, otherwise return null
+                            return rows.length > 0 ? workspaceUser : null
+                        })
+                    )
 
-                            if (postedResponse) {
-                                console.log(postedResponse)
-                                try {
-                                    const postedTimestamp =
-                                        await WorkspaceUser.update(
+                    filtedWorkspaceUsers
+                        .filter((user) => user !== null)
+                        .forEach(async (user) => {
+                            try {
+                                const postedResponse =
+                                    await webClient.chat.postMessage({
+                                        token: token,
+                                        channel: await user.userId,
+                                        text: 'survey',
+                                        blocks: [
                                             {
-                                                postedTimestamp:
-                                                    postedResponse?.ts,
-                                                channelId:
-                                                    postedResponse?.channel,
+                                                type: 'header',
+                                                text: {
+                                                    type: 'plain_text',
+                                                    text: 'Hey :wave: !',
+                                                    emoji: true,
+                                                },
                                             },
                                             {
-                                                where: {
-                                                    userId: user.userId,
+                                                type: 'divider',
+                                            },
+                                            {
+                                                type: 'section',
+                                                text: {
+                                                    type: 'plain_text',
+                                                    text: 'Please take a time to fill today survey.',
+                                                    emoji: true,
                                                 },
-                                            }
-                                        )
-                                } catch (error) {
-                                    console.log(error)
+                                            },
+                                            {
+                                                type: 'actions',
+                                                elements: [
+                                                    {
+                                                        type: 'button',
+                                                        text: {
+                                                            type: 'plain_text',
+                                                            text: 'Open survey',
+                                                            emoji: true,
+                                                        },
+                                                        value: 'click_me_123',
+                                                        action_id: 'actionId-0',
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    })
+
+                                if (postedResponse) {
+                                    console.log(postedResponse)
+                                    try {
+                                        const postedTimestamp =
+                                            await WorkspaceUser.update(
+                                                {
+                                                    postedTimestamp:
+                                                        postedResponse?.ts,
+                                                    channelId:
+                                                        postedResponse?.channel,
+                                                },
+                                                {
+                                                    where: {
+                                                        userId: user.userId,
+                                                    },
+                                                }
+                                            )
+                                    } catch (error) {
+                                        console.log(error)
+                                    }
                                 }
+                            } catch (error) {
+                                console.log('postMesage issue', error)
                             }
-                        } catch (error) {
-                            console.log('postMesage issue', error)
-                        }
-                    })
+                        })
                 }
             })
         }

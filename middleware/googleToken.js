@@ -3,15 +3,14 @@ const {
     createOAuth2Client,
     refreshAccessToken,
 } = require('../config/googleAuth.config')
-const { updateCredentials } = require('../controllers/google.controller')
+const GoogleController = require('../controllers/google.controller')
 const db = require('../models')
 const { googleAuth: GoogleAuth } = db
 
-async function checkAndRefreshToken(req, res, next) {
-    const userId = req.query.userId // Assume userId is passed as a query parameter
-
+async function checkAndRefreshToken(userId) {
     if (!userId) {
-        return res.status(400).send('User ID is required')
+        console.log('User ID is required')
+        return null
     }
 
     // const user = getUser(userId);
@@ -20,7 +19,8 @@ async function checkAndRefreshToken(req, res, next) {
     })
 
     if (!googleAuthUser) {
-        return res.status(404).send('User not found')
+        console.log('Google auth user not found')
+        return null
     }
 
     const oauth2Client = createOAuth2Client()
@@ -39,19 +39,18 @@ async function checkAndRefreshToken(req, res, next) {
         try {
             const newCredentials = await refreshAccessToken(oauth2Client)
             if (newCredentials && userId) {
-                await updateCredentials(newCredentials, userId)
+                await GoogleController.updateCredentials(newCredentials, userId)
+                return oauth2Client
             }
         } catch (error) {
-            return res.status(500).send('Error refreshing access token')
+            console.log('Error refreshing access token', error)
+            return null
         }
     }
 
-    req.oauth2Client = oauth2Client
-    next()
+    return oauth2Client
 }
 
-const googleJwt = {
-    checkAndRefreshToken: checkAndRefreshToken,
+module.exports = {
+    checkAndRefreshToken,
 }
-
-module.exports = googleJwt

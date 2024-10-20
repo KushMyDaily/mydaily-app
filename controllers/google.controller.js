@@ -1,6 +1,11 @@
 const { google } = require('googleapis')
+const moment = require('moment')
 const db = require('../models')
+const { checkAndRefreshToken } = require('../middleware/googleToken')
+const GoogleService = require('../service/google.service')
 const { googleAuth: GoogleAuth } = db
+
+const googleService = new GoogleService()
 
 const oAuth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
@@ -120,48 +125,148 @@ exports.redirect = async (req, res) => {
     }
 }
 
-exports.getCalendarEvent = async (req, res, next) => {
+exports.getDailyMessageCount = async (userId, labelIds, query) => {
     try {
-        const { refreshToken } = req.body
-
-        oAuth2Client.setCredentials({
-            refresh_token: refreshToken,
-        })
-
-        const response = await calendar.events.list({
-            auth: oAuth2Client,
-            calendarId: 'primary',
-            timeMin: new Date().toISOString(),
-            maxResults: 10,
-            singleEvents: true,
-            orderBy: 'startTime',
-        })
-        const events = response.data.items
-        if (!events || events.length === 0) {
-            console.log('No upcoming events found.')
-            return
+        const oauth2Client = await checkAndRefreshToken(userId)
+        if (oauth2Client) {
+            const maxResults = 500
+            const response = await googleService.getMessageList(
+                oauth2Client,
+                maxResults,
+                labelIds,
+                query
+            )
+            if (response?.data) {
+                return response?.data
+            }
         }
-
-        res.send({ data: events })
     } catch (error) {
-        res.send({ error: error.message })
+        console.log('getDailyMessageCount error', error)
     }
 }
 
-exports.getMessageList = async (req, res, next) => {
+exports.getDailyCalendarEvent = async (userId, timeMin, timeMax) => {
     try {
-        const { userId, maxResults, labelIds } = req.body
+        const oauth2Client = await checkAndRefreshToken(userId)
+        if (oauth2Client) {
+            const response = await googleService.getCalendorEvent(
+                oauth2Client,
+                timeMin,
+                timeMax
+            )
+            if (response?.data) {
+                const events = response?.data?.items
 
-        const gmail = google.gmail({ version: 'v1', auth: req.oauth2Client })
+                // Filter out events that fall on Saturday (6) or Sunday (0)
+                const filteredEvents = events.filter((event) => {
+                    const eventDate = event.start.dateTime || event.start.date // dateTime for timed events, date for all-day events
+                    //const dayOfWeek = new Date(eventDate).getDay()
+                    const m = moment(eventDate)
+                    const dayOfWeek = m.day()
 
-        const res = await gmail.users.messages.list({
-            userId: 'me',
-            //maxResults: maxResults,
-            //labelIds: labelIds,
-        })
+                    // Keep only events that don't fall on Saturday (6) or Sunday (0)
+                    return dayOfWeek !== 0 && dayOfWeek !== 6
+                })
+                return filteredEvents
+            }
 
-        res.send({ data: res.data })
+            console.log('message response', response)
+        }
     } catch (error) {
-        res.send({ error: error.message })
+        console.log('getDailyCalendarEvent error', error)
+    }
+}
+
+exports.getDailyMessageDetails = async (userId, labelIds, query) => {
+    try {
+        const oauth2Client = await checkAndRefreshToken(userId)
+        if (oauth2Client) {
+            const maxResults = 500
+            const response = await googleService.getMessageList(
+                oauth2Client,
+                maxResults,
+                labelIds,
+                query
+            )
+            if (response?.data.messages && response?.data.messages.length > 0) {
+                const messages = response.data.messages
+                // return response?.data
+
+                // Use Promise.all to handle async operations
+                const dailyMessages = await Promise.all(
+                    messages.map(async (message) => {
+                        const messageResponse = await googleService.getMessage(
+                            oauth2Client,
+                            message.id
+                        )
+                        return messageResponse.data
+                    })
+                )
+
+                // Extract the `internalDate` and filter out messages sent on Saturday (6) or Sunday (0)
+                const filteredMessages = dailyMessages.filter((res) => {
+                    const internalDate = res.internalDate
+                    const messageDate = moment(parseInt(internalDate)) // Create a moment object with the timestamp
+                    const dayOfWeek = messageDate.day() // Get the day of the week using moment.js
+
+                    // Keep only messages that are not sent on Saturday (6) or Sunday (0)
+                    return dayOfWeek !== 0 && dayOfWeek !== 6
+                })
+
+                return filteredMessages
+            }
+        }
+    } catch (error) {
+        console.log('getDailyMessageCount error', error)
+        return []
+    }
+}
+
+exports.getEmailThreads = async (userId, labelIds, query) => {
+    try {
+        const oauth2Client = await checkAndRefreshToken(userId)
+        if (oauth2Client) {
+            const maxResults = 500
+            const response = await googleService.getThreadsList(
+                oauth2Client,
+                maxResults,
+                labelIds,
+                query
+            )
+            if (response?.data) {
+                // return response?.data
+                const threads = response?.data.threads
+
+                // Fetch full thread details to get the latest message's internalDate
+                const fetchThreadDetails = threads.map((thread) => {
+                    return googleService.getThread(oauth2Client, thread.id)
+                })
+                const a = await Promise.all(fetchThreadDetails)
+                    .then((responses) => {
+                        // Extract the latest message's `internalDate` and filter out threads with messages sent on Saturday or Sunday
+                        const filteredThreads = responses.filter((res) => {
+                            const messages = res.data.messages
+                            const latestMessage = messages[messages.length - 1] // Get the latest message in the thread
+                            const internalDate = latestMessage.internalDate // Timestamp in milliseconds
+                            const messageDate = new Date(parseInt(internalDate))
+                            const dayOfWeek = messageDate.getDay()
+
+                            // Keep only threads where the latest message was not sent on Saturday (6) or Sunday (0)
+                            return dayOfWeek !== 0 && dayOfWeek !== 6
+                        })
+
+                        return filteredThreads && filteredThreads?.length > 0
+                            ? filteredThreads?.length
+                            : 0
+                    })
+                    .catch((error) =>
+                        console.error('Error fetching thread details:', error)
+                    )
+                return a
+            }
+        }
+    } catch (error) {
+        console.log('getEmailThreads error', error)
+        return []
     }
 }

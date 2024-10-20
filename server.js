@@ -1,5 +1,3 @@
-// server/index.js
-
 const express = require('express')
 const cors = require('cors')
 const cron = require('node-cron')
@@ -8,6 +6,18 @@ dotenv.config()
 
 const { slackApp, installer } = require('./connectors/slack')
 const { runSurvey } = require('./controllers/slack.controller')
+const { storeDailyWorkloadStats } = require('./controllers/workload.controller')
+const {
+    storeReleationshipsStats,
+} = require('./controllers/relationships.controller')
+const {
+    storetimeBoundariesStats,
+} = require('./controllers/timeBoundaries.controller')
+const { storeAutonomyStats } = require('./controllers/autonomy.controller')
+const {
+    storeCommunicationStats,
+} = require('./controllers/communications.controller')
+const { storeDailyStaticsData } = require('./controllers/stat.controller')
 
 const app = express()
 
@@ -146,10 +156,15 @@ registerViewHandlers(slackApp)
 require('./routes/auth.routes')(app)
 require('./routes/user.routes')(app)
 require('./routes/google.routes')(app)
+require('./routes/stat.routes')(app)
 
 app.get('/api/users', (req, res) => {
     runSurvey()
     return res.json('user')
+})
+app.get('/api/calculations', (req, res) => {
+    executeCalculationSequentially()
+    return res.json('calculation')
 })
 ;(async () => {
     // Start your app
@@ -158,13 +173,40 @@ app.get('/api/users', (req, res) => {
     console.log('⚡️ Bolt app is running!')
 })()
 
+async function executeCalculationSequentially() {
+    try {
+        await storeDailyWorkloadStats()
+        await storeReleationshipsStats()
+        await storetimeBoundariesStats()
+        await storeAutonomyStats()
+        await storeCommunicationStats()
+    } catch (error) {
+        console.error('An error occurred:', error)
+    }
+}
+
 // Schedule the cron job to run at a specific time
-cron.schedule('0 24 18 * * *', () => {
-    // Runs at 10:00 AM every day
-    console.log('Cron job running...')
+cron.schedule('0 35 19 * * 1-5', () => {
+    console.log('Run survey cron job running...')
 
     // Call the controller method directly
     runSurvey()
+})
+
+// Schedule the cron job to run stress factors store
+cron.schedule('0 05 23 * * 1-5', () => {
+    console.log('Stress factors cron job running...')
+
+    // Call the controller method directly
+    executeCalculationSequentially()
+})
+
+// Schedule the cron job to run daily statics data store
+cron.schedule('0 35 23 * * 1-5', () => {
+    console.log('Daily statics data cron job running...')
+
+    // Call the controller method directly
+    storeDailyStaticsData()
 })
 
 // eslint-disable-next-line no-console

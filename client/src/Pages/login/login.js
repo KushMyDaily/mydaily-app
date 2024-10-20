@@ -160,7 +160,9 @@ const Login = () => {
                               </Text>
                             )}
                             <FormHelperText textAlign="right">
-                              <Link>forgot password?</Link>
+                              <Link href="/forgotPassword">
+                                forgot password?
+                              </Link>
                             </FormHelperText>
                           </FormControl>
                         )}

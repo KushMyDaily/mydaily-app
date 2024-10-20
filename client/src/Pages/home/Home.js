@@ -1,17 +1,24 @@
 /* eslint-disable no-unused-vars */
 import { Box, Card, CardBody, CardHeader, Flex, Text } from "@chakra-ui/react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import moment from "moment";
 import PageHeader from "../../comps/PageHeader";
 import Color from "../../utils/Color";
 import Chart from "react-apexcharts";
 import Calendar from "react-calendar";
+import {
+  stressfactorStat,
+  wellbeingStat,
+  monthStat,
+  calendaStat,
+} from "../../redux/features/statsData/statDataThunk";
+import { useDispatch, useSelector } from "react-redux";
 import "react-calendar/dist/Calendar.css";
 
 import Legends from "../../comps/Legends";
 import CircularProgressCard from "../../comps/CircularProgressCard";
 import ProgressBar from "./../../comps/ProgressBar";
 import styles from "./home.module.css";
-import { useEffect } from "react";
 import { API } from "../../services/apiBuilder";
 
 const OPTIONS = {
@@ -58,29 +65,31 @@ const OPTIONS = {
         fontWeight: "500",
       },
     },
+    min: 1,
+    max: 10,
   },
   grid: {
     show: false,
   },
   colors: [
     function ({ value }) {
-      if (value > 5) {
-        return "#11845B";
+      if (value >= 9.5 && value <= 10) {
+        return Color.Amazing;
       }
-      if (value > 4) {
-        return "#05C168";
+      if (value >= 7.5 && value <= 9.5) {
+        return Color.Great;
       }
-      if (value > 3) {
-        return "#98DC7F";
+      if (value >= 5.5 && value <= 7.5) {
+        return Color.Good;
       }
-      if (value > 2) {
-        return "#FFCA43";
+      if (value >= 3.5 && value <= 5.5) {
+        return Color.Alright;
       }
-      if (value > 1) {
-        return "#FF9E2C";
+      if (value >= 1.5 && value <= 3.5) {
+        return Color.Low;
       }
-      if (value > 0) {
-        return "#FF6871";
+      if (value >= 0 && value <= 1.5) {
+        return Color.Exhausted;
       } else {
         return "#000000";
       }
@@ -135,16 +144,10 @@ const inputDates = [
   { date: new Date("2023-08-21"), tooltip: "amazing" },
   { date: new Date("2023-08-22"), tooltip: "low" },
   { date: new Date("2023-08-25"), tooltip: "great" },
-  { date: new Date("2023-10-19"), tooltip: "great" },
+  { date: new Date("2024-10-08"), tooltip: "great" },
 ];
 
 function Home() {
-  const [series, setSeries] = useState([
-    {
-      data: [5, 4.8, 2.7, 2.9, 3.6, 4, 4.6, 4.8, 5.1, 5.3, 2, 0.75],
-    },
-  ]);
-
   const [selectedAmazing, setSelectedAmazing] = useState([]);
   const [selectedGreat, setSelectedGreat] = useState([]);
   const [selectedGood, setSelectedGood] = useState([]);
@@ -153,13 +156,128 @@ function Home() {
   const [selectedExhausted, setSelectedExhausted] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  // State to store the scores and averages
+  const [wellBeingScore, setWellBeingScore] = useState(0);
+  const [workloadScore, setWorkloadScore] = useState(0);
+  const [autonomyScore, setAutonomyScore] = useState(0);
+  const [communicationScore, setCommunicationScore] = useState(0);
+  const [relationshipsScore, setRelationshipsScore] = useState(0);
+  const [timeBoundariesScore, setTimeBoundariesScore] = useState(0);
+  const [monthlyAverages, setMonthlyAverages] = useState([]);
+  const [formAverageLast30Days, setFormAverageLast30Days] = useState(0);
+  const [formAverageAllData, setFormAverageAllData] = useState(0);
+  const [stressFactorAverageLast30Days, setStressFactorAverageLast30Days] =
+    useState(0);
+  const [stressFactorAverageAllData, setStressFactorAverageAllData] =
+    useState(0);
+  const [calendarDates, setCalendarDates] = useState([]);
+
+  const { user } = useSelector((state) => state.signin);
+  const {
+    stressfactorsIsLoading,
+    stressfactorsError,
+    stressfactors,
+    wellbeingIsLoading,
+    wellbeingError,
+    wellbeing,
+    monthDataLoading,
+    monthDataError,
+    monthData,
+    calendarLoading,
+    calendarError,
+    calendar,
+  } = useSelector((state) => state.statsData);
+  const dispatch = useDispatch();
+
   // test restricting the calendar
   const currentDate = new Date();
   const threeMonthsAgo = new Date(currentDate);
   threeMonthsAgo.setMonth(currentDate.getMonth() - 3);
 
   useEffect(() => {
-    const filterAmazingDate = inputDates?.filter(
+    const date = new Date();
+    let thisYear = date.getFullYear();
+    dispatch(
+      stressfactorStat({
+        userId: user.id,
+        date: getPreviousWeekday(new Date()),
+      }),
+    );
+    dispatch(
+      wellbeingStat({
+        userId: user.id,
+        date: getPreviousWeekday(new Date()),
+      }),
+    );
+    dispatch(
+      monthStat({
+        userId: user.id,
+        year: thisYear,
+      }),
+    );
+    dispatch(
+      calendaStat({
+        userId: user.id,
+        year: thisYear,
+      }),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (stressfactors && stressfactors.data) {
+      setWorkloadScore(stressfactors.data?.workload || 0);
+      setRelationshipsScore(stressfactors.data?.relationship || 0);
+      setTimeBoundariesScore(stressfactors.data?.timeBoundaries || 0);
+      setAutonomyScore(stressfactors.data?.autonomy || 0);
+      setCommunicationScore(stressfactors.data?.communication || 0);
+    }
+  }, [stressfactors]);
+
+  useEffect(() => {
+    if (wellbeing && wellbeing.data) {
+      setWellBeingScore(wellbeing.data?.yourForm);
+      setFormAverageLast30Days(wellbeing.data?.formAverageLast30Days);
+      setFormAverageAllData(wellbeing.data?.formAverageAllData);
+      setStressFactorAverageLast30Days(
+        wellbeing.data?.stressFactorAverageLast30Days,
+      );
+      setStressFactorAverageAllData(wellbeing.data?.stressFactorAverageAllData);
+    }
+  }, [wellbeing]);
+
+  useEffect(() => {
+    if (monthData && monthData.data) {
+      const charSeriesData = monthData.data.map((month) => {
+        return month.yourForm;
+      });
+
+      setMonthlyAverages([{ data: charSeriesData }]);
+    }
+  }, [monthData]);
+
+  useEffect(() => {
+    if (calendar && calendar.data) {
+      const calendarData = calendar.data.map((date) => {
+        // Extract date and format it as YYYY-MM-DD
+        const dateOnly = date?.createdAt;
+        const [year, month, day] = dateOnly.split("-").map(Number); // Split and convert to numbers
+        const dateObject = new Date(year, month - 1, day);
+
+        // Get the tooltip based on your custom logic (assuming defineClass function)
+        const tooltip = defineClass(date?.yourForm);
+
+        // Return the object with date and tooltip in the desired format
+        return {
+          date: dateObject, // Ensures it's a Date object in UTC
+          tooltip: tooltip,
+        };
+      });
+      setCalendarDates(calendarData);
+    }
+  }, [calendar]);
+
+  useEffect(() => {
+    const filterAmazingDate = calendarDates?.filter(
       (item) => item.tooltip == "amazing",
     );
     const AmazingDates = filterAmazingDate?.map((dateStr) => {
@@ -168,7 +286,7 @@ function Home() {
     });
     setSelectedAmazing(AmazingDates);
 
-    const filterGreatDate = inputDates?.filter(
+    const filterGreatDate = calendarDates?.filter(
       (item) => item.tooltip == "great",
     );
     const GreatDates = filterGreatDate?.map((dateStr) => {
@@ -177,14 +295,16 @@ function Home() {
     });
     setSelectedGreat(GreatDates);
 
-    const filterGoodDate = inputDates?.filter((item) => item.tooltip == "good");
+    const filterGoodDate = calendarDates?.filter(
+      (item) => item.tooltip == "good",
+    );
     const goodDates = filterGoodDate?.map((dateStr) => {
       const date = new Date(dateStr.date);
       return `${date.getDate().toString().padStart(1, "0")}-${(date.getMonth() + 1).toString().padStart(1, "0")}-${date.getFullYear()}`;
     });
     setSelectedGood(goodDates);
 
-    const filterAlrightDate = inputDates?.filter(
+    const filterAlrightDate = calendarDates?.filter(
       (item) => item.tooltip == "alright",
     );
     const AlrightDates = filterAlrightDate?.map((dateStr) => {
@@ -193,14 +313,16 @@ function Home() {
     });
     setSelectedAlright(AlrightDates);
 
-    const filterLowDate = inputDates?.filter((item) => item.tooltip == "low");
+    const filterLowDate = calendarDates?.filter(
+      (item) => item.tooltip == "low",
+    );
     const LowDates = filterLowDate?.map((dateStr) => {
       const date = new Date(dateStr.date);
       return `${date.getDate().toString().padStart(1, "0")}-${(date.getMonth() + 1).toString().padStart(1, "0")}-${date.getFullYear()}`;
     });
     setSelectedLow(LowDates);
 
-    const filterExhaustedDate = inputDates?.filter(
+    const filterExhaustedDate = calendarDates?.filter(
       (item) => item.tooltip == "exhausted",
     );
     const ExhaustedDates = filterExhaustedDate?.map((dateStr) => {
@@ -208,7 +330,8 @@ function Home() {
       return `${date.getDate().toString().padStart(1, "0")}-${(date.getMonth() + 1).toString().padStart(1, "0")}-${date.getFullYear()}`;
     });
     setSelectedExhausted(ExhaustedDates);
-  }, []);
+  }, [calendarDates]);
+
   // State to store the selected date
   const [selectedDate, setSelectedDate] = useState(null);
 
@@ -220,12 +343,29 @@ function Home() {
     return `${yyyy}-${mm}-${dd}`;
   };
 
+  // Function to get the last weekday from a given date
+  function getPreviousWeekday(date) {
+    let previousDate = moment(date).subtract(1, "days");
+
+    // If the day is Saturday (6) or Sunday (0), adjust to the last weekday (Friday)
+    if (previousDate.day() === 6) {
+      // If it's Saturday, subtract 1 more day to get Friday
+      previousDate = previousDate.subtract(1, "days");
+    } else if (previousDate.day() === 0) {
+      // If it's Sunday, subtract 2 more days to get Friday
+      previousDate = previousDate.subtract(2, "days");
+    }
+
+    return previousDate.format("YYYY-MM-DD");
+  }
+
   // Function to customize day cell content with tooltips
   const tileContent = ({ date, view }) => {
     if (view === "month") {
-      const matchDate = inputDates.find(
+      const matchDate = calendarDates.find(
         (item) => item.date.toDateString() === date.toDateString(),
       );
+
       if (matchDate) {
         return (
           <div className="tooltip-wrapper">
@@ -238,7 +378,6 @@ function Home() {
   };
 
   const getTileClassName = (date) => {
-    // console.log(date)
     const formattedDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
     if (selectedAmazing?.includes(formattedDate)) {
       return "amazing-day";
@@ -266,17 +405,6 @@ function Home() {
 
     return "";
   };
-
-  // State to store the scores and averages
-  const [wellBeingScore, setWellBeingScore] = useState(null);
-  const [workloadScore, setWorkloadScore] = useState(null);
-  const [autonomyScore, setAutonomyScore] = useState(null);
-  const [communicationScore, setCommunicationScore] = useState(null);
-  const [relationshipsScore, setRelationshipsScore] = useState(null);
-  const [timeBoundariesScore, setTimeBoundariesScore] = useState(null);
-  const [monthlyAverages, setMonthlyAverages] = useState([]);
-  const [allTimeAverage, setAllTimeAverage] = useState(null);
-  const [last30DaysAverage, setLast30DaysAverage] = useState(null);
 
   // All the queries for the scores
   //  const FETCH_WELLBEING_SCORE = `
@@ -615,6 +743,63 @@ function Home() {
     }
   };
 
+  const defineColor = (score) => {
+    switch (true) {
+      case score >= 9.5 && score <= 10:
+        return Color.Amazing;
+      case score >= 7.5 && score < 9.5:
+        return Color.Great;
+      case score >= 5.5 && score < 7.5:
+        return Color.Good;
+      case score >= 3.5 && score < 5.5:
+        return Color.Alright;
+      case score >= 1.5 && score < 3.5:
+        return Color.Low;
+      case score >= 0 && score < 1.5:
+        return Color.Exhausted;
+      default:
+        return "#000000"; // Handle cases outside defined ranges
+    }
+  };
+
+  const defineBGColor = (score) => {
+    switch (true) {
+      case score >= 9.5 && score <= 10:
+        return Color.AmazingBg;
+      case score >= 7.5 && score < 9.5:
+        return Color.GreatBg;
+      case score >= 5.5 && score < 7.5:
+        return Color.GoodBg;
+      case score >= 3.5 && score < 5.5:
+        return Color.AlrightBg;
+      case score >= 1.5 && score < 3.5:
+        return Color.LowBg;
+      case score >= 0 && score < 1.5:
+        return Color.ExhaustedBg;
+      default:
+        return "#000000"; // Handle cases outside defined ranges
+    }
+  };
+
+  const defineClass = (score) => {
+    switch (true) {
+      case score >= 9.5 && score <= 10:
+        return "amazing";
+      case score >= 7.5 && score < 9.5:
+        return "great";
+      case score >= 5.5 && score < 7.5:
+        return "good";
+      case score >= 3.5 && score < 5.5:
+        return "alright";
+      case score >= 1.5 && score < 3.5:
+        return "low";
+      case score >= 0 && score < 1.5:
+        return "exhausted";
+      default:
+        return ""; // Handle cases outside defined ranges
+    }
+  };
+
   return (
     <Box>
       <PageHeader
@@ -634,8 +819,8 @@ function Home() {
                 percentage={wellBeingScore}
                 increase={true}
                 statusText="Increase since last week"
-                color={Color.Good}
-                bgColor={Color.GoodBg}
+                color={defineColor(wellBeingScore)}
+                bgColor={defineBGColor(wellBeingScore)}
               />
             </Box>
             <Box className={styles.chartColInner}>
@@ -663,17 +848,17 @@ function Home() {
                   <Box mb={5}>
                     <ProgressBar
                       heading="Last 30 days"
-                      rating={last30DaysAverage}
-                      textColor={Color.Good}
-                      progressColor="good"
+                      rating={formAverageLast30Days}
+                      textColor={defineColor(formAverageLast30Days)}
+                      progressColor={defineClass(formAverageLast30Days)}
                     />
                   </Box>
                   <Box mb={5}>
                     <ProgressBar
                       heading="All time"
-                      rating={allTimeAverage}
-                      textColor={Color.Alright}
-                      progressColor="alright"
+                      rating={formAverageAllData}
+                      textColor={defineColor(formAverageAllData)}
+                      progressColor={defineClass(formAverageAllData)}
                     />
                   </Box>
                   <Text
@@ -689,17 +874,17 @@ function Home() {
                   <Box mb={5}>
                     <ProgressBar
                       heading="Last 30 days"
-                      rating="7.6"
-                      textColor={Color.Good}
-                      progressColor="good"
+                      rating={stressFactorAverageLast30Days}
+                      textColor={defineColor(stressFactorAverageLast30Days)}
+                      progressColor={defineClass(stressFactorAverageLast30Days)}
                     />
                   </Box>
                   <Box>
                     <ProgressBar
                       heading="All time"
-                      rating="8.6"
-                      textColor={Color.Great}
-                      progressColor="great"
+                      rating={stressFactorAverageAllData}
+                      textColor={defineColor(stressFactorAverageAllData)}
+                      progressColor={defineClass(stressFactorAverageAllData)}
                     />
                   </Box>
                 </CardBody>
@@ -729,7 +914,7 @@ function Home() {
             <CardBody p={0} className={styles.calenderCardInner}>
               <Box className="calenderWrap">
                 <Calendar
-                  value={selectedDate}
+                  //value={inputDates}
                   tileContent={tileContent}
                   tileClassName={({ date }) => getTileClassName(date)}
                 />
@@ -754,8 +939,8 @@ function Home() {
               percentage={workloadScore}
               increase={true}
               statusText="Decrease since last week"
-              color={Color.Low}
-              bgColor={Color.LowBg}
+              color={defineColor(workloadScore)}
+              bgColor={defineBGColor(workloadScore)}
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -764,8 +949,8 @@ function Home() {
               percentage={relationshipsScore}
               increase={false}
               statusText="Decrease since last week"
-              color={Color.Good}
-              bgColor={Color.GoodBg}
+              color={defineColor(relationshipsScore)}
+              bgColor={defineBGColor(relationshipsScore)}
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -774,8 +959,8 @@ function Home() {
               percentage={timeBoundariesScore}
               increase={false}
               statusText="Decrease since last week"
-              color={Color.Low}
-              bgColor={Color.LowBg}
+              color={defineColor(timeBoundariesScore)}
+              bgColor={defineBGColor(timeBoundariesScore)}
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -784,8 +969,8 @@ function Home() {
               percentage={autonomyScore}
               increase={true}
               statusText="Increase since last week"
-              color={Color.Good}
-              bgColor={Color.GoodBg}
+              color={defineColor(autonomyScore)}
+              bgColor={defineBGColor(autonomyScore)}
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -794,8 +979,8 @@ function Home() {
               percentage={communicationScore}
               increase={true}
               statusText="Increase since last week"
-              color={Color.Amazing}
-              bgColor={Color.AmazingBg}
+              color={defineColor(communicationScore)}
+              bgColor={defineBGColor(communicationScore)}
             />
           </Box>
         </Flex>
