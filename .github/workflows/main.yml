@@ -11,32 +11,27 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install dependencies
-      run: npm install
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.8.1
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
     - name: Deploy to AWS EC2
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.REMOTE_HOST }}
-        username: ${{ secrets.REMOTE_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT}}
-        source: "./"  # This now correctly points to the current directory
-        target: "/home/ubuntu/mydaily-app"
-        debug: true
-
-    - name: Restart PM2 application
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.REMOTE_HOST }}
-        username: ${{ secrets.REMOTE_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT}}
-        script: |
-          cd /home/ubuntu/mydaily-app
-          pm2 reload all  # This command restarts your application
-
-    - name: Write SSH private key to file
       run: |
-         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-         chmod 600 ~/.ssh/id_rsa
+        ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+          # Go to the app directory on the EC2 instance
+          cd /home/ubuntu/mydaily-app  # Change this to your app's location
+
+          # Pull the latest code from GitHub
+          git pull origin main
+
+          # Install/update dependencies
+          npm install
+
+          # Restart the application using PM2
+          pm2 reload ecosystem.config.js --env production || pm2 start ecosystem.config.js --env production
+
+          # Optionally check PM2 logs for errors
+          pm2 logs
+        EOF
+
