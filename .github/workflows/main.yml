@@ -29,7 +29,7 @@ jobs:
           npm install
 
           # Restart the application using PM2
-          pm2 reload ecosystem.config.js || pm2 start ecosystem.config.js
+          pm2 reload all
 
           # Optionally check PM2 logs for errors
           pm2 logs
