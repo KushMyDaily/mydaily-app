@@ -19,6 +19,9 @@ jobs:
     - name: Deploy to AWS EC2
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@${{ secrets.REMOTE_HOST }} << 'EOF'
+          # Add npm global binaries to PATH
+          export PATH=$PATH:/usr/local/bin
+          
           # Go to the app directory on the EC2 instance
           cd /home/ubuntu/mydaily-app  # Change this to your app's location
 
@@ -29,7 +32,7 @@ jobs:
           npm install
 
           # Restart the application using PM2
-          pm2 reload all
+          pm2 reload ecosystem.config.js || pm2 start ecosystem.config.js
 
           # Optionally check PM2 logs for errors
           pm2 logs
