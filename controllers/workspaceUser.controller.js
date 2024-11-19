@@ -1,6 +1,7 @@
 const db = require('../models')
 const SlackOAuthAccess = db.slackOAuthAccess
 const WorkspaceUser = db.workspaceUser
+const User = db.user
 
 exports.create = (workspaceUser) => {
     return WorkspaceUser.create({
@@ -11,11 +12,12 @@ exports.create = (workspaceUser) => {
         isAdmin: workspaceUser.isAdmin,
         isOwner: workspaceUser.isOwner,
     })
-        .then((workspaceUser) => {
+        .then(async (workspaceUser) => {
             console.log(
                 '>> Created workspaceUser: ' +
                     JSON.stringify(workspaceUser, null, 4)
             )
+            await updateUsersWorkspaceId(workspaceUser)
             return workspaceUser
         })
         .catch((err) => {
@@ -99,4 +101,34 @@ exports.findById = (id) => {
         .catch((err) => {
             console.log('>> Error while finding workspaceUser: ', err)
         })
+}
+
+async function updateUsersWorkspaceId(workspaceUser) {
+    try {
+        const user = await User.findOne({
+            where: { email: workspaceUser.email },
+        })
+
+        if (user) {
+            const workspaceUserIds = user.workspaceUserIds
+            if (Array.isArray(workspaceUserIds)) {
+                if (!workspaceUserIds.includes(workspaceUser.id)) {
+                    await user.update({
+                        workspaceUserIds: [
+                            ...workspaceUserIds,
+                            workspaceUser.id,
+                        ],
+                    })
+                }
+            } else if (workspaceUserIds !== workspaceUser.id) {
+                await user.update({
+                    workspaceUserIds: workspaceUser.id,
+                })
+            }
+        } else {
+            console.log('user not found')
+        }
+    } catch (error) {
+        console.log('>> Error while updating user workspace user id: ', error)
+    }
 }

@@ -185,29 +185,31 @@ async function executeCalculationSequentially() {
     }
 }
 
-// Schedule the cron job to run at a specific time
-cron.schedule('0 35 19 * * 1-5', () => {
-    console.log('Run survey cron job running...')
+if (process.env.APP_ENV === 'production') {
+    // Schedule the cron job to run at a specific time
+    cron.schedule('0 35 19 * * 1-5', () => {
+        console.log('Run survey cron job running...')
 
-    // Call the controller method directly
-    runSurvey()
-})
+        // Call the controller method directly
+        runSurvey()
+    })
 
-// Schedule the cron job to run stress factors store
-cron.schedule('0 05 23 * * 1-5', () => {
-    console.log('Stress factors cron job running...')
+    // Schedule the cron job to run stress factors store
+    cron.schedule('0 05 23 * * 1-5', () => {
+        console.log('Stress factors cron job running...')
 
-    // Call the controller method directly
-    executeCalculationSequentially()
-})
+        // Call the controller method directly
+        executeCalculationSequentially()
+    })
 
-// Schedule the cron job to run daily statics data store
-cron.schedule('0 35 23 * * 1-5', () => {
-    console.log('Daily statics data cron job running...')
+    // Schedule the cron job to run daily statics data store
+    cron.schedule('0 35 23 * * 1-5', () => {
+        console.log('Daily statics data cron job running...')
 
-    // Call the controller method directly
-    storeDailyStaticsData()
-})
+        // Call the controller method directly
+        storeDailyStaticsData()
+    })
+}
 
 // eslint-disable-next-line no-console
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`))
