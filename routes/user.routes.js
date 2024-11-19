@@ -11,6 +11,22 @@ module.exports = function (app) {
     })
 
     app.get('/api/test/all', [authJwt.verifyToken], controller.allAccess)
+    app.get(
+        '/api/checksocialauth/:userid',
+        [authJwt.verifyToken],
+        controller.checkSocialAuth
+    )
+    app.post(
+        '/api/updateprofile',
+        [authJwt.verifyToken],
+        controller.updateProfile
+    )
+    app.get(
+        '/api/getprofile/:userid',
+        [authJwt.verifyToken],
+        controller.getProfile
+    )
+    app.post('/api/sendconcern/', [authJwt.verifyToken], controller.sendConcern)
 
     // app.get(
     //   "/api/test/user",

@@ -9,13 +9,16 @@ export const API = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
-    // "x-access-token": storedAccessToken,
   },
 });
 
+// Helper function to update the access token in local storage
+const updateLocalAccessToken = (token) => {
+  localStorage.setItem("accessToken", JSON.stringify(token));
+};
+
 API.interceptors.request.use(
   (config) => {
-    //   const token = storedAccessToken;
     if (JSON.parse(localStorage.getItem("accessToken"))) {
       config.headers["x-access-token"] = JSON.parse(
         localStorage.getItem("accessToken"),
@@ -41,13 +44,16 @@ API.interceptors.response.use(
         originalConfig._retry = true;
 
         try {
-          await store.dispatch(
+          const { payload } = await store.dispatch(
             refreshToken({
               refreshToken: JSON.parse(localStorage.getItem("refreshToken")),
             }),
           );
 
-          //updateLocalAccessToken(data.accessToken);
+          if (!payload) {
+            updateLocalAccessToken(payload.accessToken);
+            originalConfig.headers["x-access-token"] = payload.accessToken;
+          }
 
           return API(originalConfig);
         } catch (_error) {

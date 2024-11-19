@@ -18,9 +18,20 @@
   height: 52px !important;
 }
 
+.slackBtn {
+  background: #000000 !important;
+  color: #ffffff !important;
+  height: 52px !important;
+}
+
 .updatedbtn {
   height: 52px !important;
   background: #4339f2 !important;
   max-width: 340px !important;
   color: #ffffff !important;
+}
+
+.conflictManagerBtn {
+  background: #ea35c9 !important;
+  height: 52px !important;
 }

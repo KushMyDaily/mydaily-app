@@ -1,4 +1,7 @@
 import {
+  Alert,
+  AlertIcon,
+  AlertDescription,
   Avatar,
   Box,
   Card,
@@ -6,22 +9,51 @@ import {
   Text,
   Flex,
   Input,
+  Textarea,
   Select,
   Button,
   Image,
   useToast,
+  Spinner,
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
+import { Icon } from "@chakra-ui/icon";
 import React, { useEffect, useState } from "react";
+import { FaRegFrown } from "react-icons/fa";
+import { Formik, Field } from "formik";
 import PageHeader from "../../comps/PageHeader";
 import ImageUpload from "../../comps/ImageUpload";
 import styles from "./settings.module.css";
 
 import { signOutUser } from "../../redux/features/signin/signinThunk";
 import { google } from "../../redux/features/google/googleThunk";
+import {
+  checkSocialAuth,
+  updateProfile,
+  getProfile,
+  sendConcern,
+} from "../../redux/features/user/userThunk";
 import { useDispatch, useSelector } from "react-redux";
-import googleLogo from "../../assets/google-logo.jpg";
+import slackLogo from "../../assets/slack.png";
+import googleLogo from "../../assets/google.png";
 import mydailyLogo from "../../assets/img/mydailyLogo.png";
 
+import CustomDatePicker from "../../comps/CustomDatePicker";
+
+import "react-datepicker/dist/react-datepicker.css";
+
+// const customStyles = {
+//   redBorder: {
+//     border: "1px solid red",
+//   },
+// };
 // const GOOGLE_CLIENT_ID =
 //   "82428000378-qgiakmtoq94ovgrjtja4bistjten4kgm.apps.googleusercontent.com";
 // const GOOGLE_CLIENT_SECRET = "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";
@@ -32,9 +64,18 @@ function Settings() {
   //const [user, setUser] = useState({});
   //const [codeClient, setCodeClient] = useState({});
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [concernText, setConcernText] = useState("");
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const btnRef = React.useRef();
 
   const { user } = useSelector((state) => state.signin);
   const { url, error } = useSelector((state) => state.google);
+  const {
+    socialAuth,
+    userDetails,
+    updateUserProfileIsLoading,
+    userConcernsIsLoading,
+  } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const toast = useToast();
 
@@ -53,6 +94,11 @@ function Settings() {
     }
   }, [url, error]);
 
+  useEffect(() => {
+    dispatch(checkSocialAuth(user.id));
+    dispatch(getProfile(user.id));
+  }, []);
+
   const handleImageUpload = (imageDataURL) => {
     setUploadedImage(imageDataURL);
   };
@@ -67,6 +113,32 @@ function Settings() {
 
   const getCode = () => {
     dispatch(google({ userId: user.id }));
+  };
+
+  const handleSendConcern = () => {
+    dispatch(
+      sendConcern({
+        userId: user.id,
+        concern: concernText,
+      }),
+    ).then((data) => {
+      if (data.meta.requestStatus === "fulfilled") {
+        toast({
+          title: "Concern sent successfully",
+          status: "success",
+          position: "top-right",
+          isClosable: true,
+        });
+        onClose();
+      } else {
+        toast({
+          title: data.payload.message,
+          status: "error",
+          position: "top-right",
+          isClosable: true,
+        });
+      }
+    });
   };
 
   // function getTokens(response) {
@@ -231,102 +303,279 @@ function Settings() {
               <ImageUpload onImageUpload={handleImageUpload} />
             </Box>
             <Box width={"50%"} maxWidth={"470px"} pr={5}>
-              <Box mb={5}>
-                <Text color={"#606060"} pb={3} fontSize={"sm"}>
-                  First Name
-                </Text>
-                <Input
-                  placeholder="Enter your first name"
-                  size={"lg"}
-                  bg={"#F5F6FA"}
-                  fontSize={"sm"}
-                  border={"1px solid #D5D5D5"}
-                  borderRadius={10}
-                />
-              </Box>
-              <Box mb={5}>
-                <Text color={"#606060"} pb={3} fontSize={"sm"}>
-                  Last Name
-                </Text>
-                <Input
-                  placeholder="Enter your last name"
-                  size={"lg"}
-                  bg={"#F5F6FA"}
-                  fontSize={"sm"}
-                  border={"1px solid #D5D5D5"}
-                  borderRadius={10}
-                />
-              </Box>
-              <Box mb={5}>
-                <Text color={"#606060"} pb={3} fontSize={"sm"}>
-                  Your Email
-                </Text>
-                <Input
-                  placeholder="Enter your email"
-                  size={"lg"}
-                  bg={"#F5F6FA"}
-                  fontSize={"sm"}
-                  border={"1px solid #D5D5D5"}
-                  borderRadius={10}
-                />
-              </Box>
-              <Box mb={5}>
-                <Text color={"#606060"} pb={3} fontSize={"sm"}>
-                  Your Position
-                </Text>
-                <Input
-                  placeholder="Enter your position"
-                  size={"lg"}
-                  bg={"#F5F6FA"}
-                  fontSize={"sm"}
-                  border={"1px solid #D5D5D5"}
-                  borderRadius={10}
-                />
-              </Box>
-              <Box>
-                <Text color={"#606060"} pb={3} fontSize={"sm"}>
-                  Gender
-                </Text>
-                <Select
-                  placeholder="Select your gender"
-                  size={"lg"}
-                  bg={"#F5F6FA"}
-                  fontSize={"sm"}
-                  border={"1px solid #D5D5D5"}
-                  borderRadius={10}
-                  width={"50%"}
-                >
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </Select>
-              </Box>
-            </Box>
-            <Box width={"50%"} maxWidth={"470px"} pl={5}>
-              {/*<div id="signInDiv"></div>*/}
-              <a href="https://slack.com/oauth/v2/authorize?client_id=4578727160275.4581313497012&scope=channels:history,channels:read,chat:write,commands,conversations.connect:manage,conversations.connect:read,conversations.connect:write,groups:history,groups:read,im:history,users:read,users:read.email,channels:write.invites,groups:write.invites,mpim:write.invites,channels:manage,groups:write,im:write,mpim:write&user_scope=channels:write,channels:write.invites">
-                <img
-                  alt="Add to Slack"
-                  height="40"
-                  width="139"
-                  src="https://platform.slack-edge.com/img/add_to_slack.png"
-                  srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"
-                />
-              </a>
-
-              <Button
-                className={styles.googleBtn}
-                colorScheme="white"
-                variant="solid"
-                mt={5}
-                w={"60%"}
-                p={"0 15px"}
-                justifyContent={"flex-start"}
-                leftIcon={<Image src={googleLogo} style={{ width: "25px" }} />}
-                onClick={getCode}
+              <Formik
+                initialValues={{
+                  username: userDetails ? userDetails.username : "",
+                  fullName: userDetails ? userDetails.fullname : "",
+                  birthday: userDetails ? userDetails.birthday : "",
+                  manager:
+                    userDetails && userDetails.Managers
+                      ? userDetails.Managers[0]?.fullname
+                      : "",
+                  position: userDetails ? userDetails.position : "",
+                  gender: userDetails ? userDetails.gender : "",
+                }}
+                enableReinitialize
+                //validationSchema={FormSchema}
+                onSubmit={(values) => {
+                  dispatch(updateProfile({ userid: user.id, ...values }));
+                }}
               >
-                Connect
-              </Button>
+                {({ handleSubmit }) => (
+                  <form onSubmit={handleSubmit}>
+                    {/* <Form> */}
+                    <Box mb={5}>
+                      <Text color={"#606060"} pb={3} fontSize={"sm"}>
+                        Username
+                      </Text>
+                      <Field
+                        id="username"
+                        name="username"
+                        placeholder="username"
+                        render={({ field, form: { touched, errors } }) => (
+                          <div>
+                            <Input
+                              {...field}
+                              placeholder="Enter your username"
+                              size={"lg"}
+                              bg={"#F5F6FA"}
+                              fontSize={"sm"}
+                              border={"1px solid #D5D5D5"}
+                              borderRadius={10}
+                            />
+                            {touched[field.name] && errors[field.name] && (
+                              <Text color="tomato" fontSize="xs">
+                                {errors[field.name]}
+                              </Text>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </Box>
+                    <Box mb={5}>
+                      <Text color={"#606060"} pb={3} fontSize={"sm"}>
+                        Full Name
+                      </Text>
+                      <Field
+                        id="fullName"
+                        name="fullName"
+                        placeholder="Full Name"
+                        render={({ field, form: { touched, errors } }) => (
+                          <div>
+                            <Input
+                              {...field}
+                              placeholder="Enter your full name"
+                              size={"lg"}
+                              bg={"#F5F6FA"}
+                              fontSize={"sm"}
+                              border={"1px solid #D5D5D5"}
+                              borderRadius={10}
+                            />
+                            {touched[field.name] && errors[field.name] && (
+                              <Text color="tomato" fontSize="xs">
+                                {errors[field.name]}
+                              </Text>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </Box>
+                    <Box mb={5}>
+                      <Text color={"#606060"} pb={3} fontSize={"sm"}>
+                        Manager
+                      </Text>
+                      <Field
+                        id="manager"
+                        name="manager"
+                        placeholder="manager"
+                        render={({ field, form: { touched, errors } }) => (
+                          <div>
+                            <Input
+                              {...field}
+                              size={"lg"}
+                              bg={"#F5F6FA"}
+                              fontSize={"sm"}
+                              border={"1px solid #D5D5D5"}
+                              borderRadius={10}
+                              disabled
+                            />
+                            {touched[field.name] && errors[field.name] && (
+                              <Text color="tomato" fontSize="xs">
+                                {errors[field.name]}
+                              </Text>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </Box>
+                    <Box mb={5}>
+                      <Text color={"#606060"} pb={3} fontSize={"sm"}>
+                        Birthday
+                      </Text>
+                      <Field
+                        id="birthday"
+                        name="birthday"
+                        placeholder="birthday"
+                        render={({
+                          field,
+                          form: { touched, errors, setFieldValue },
+                        }) => (
+                          <div>
+                            <CustomDatePicker
+                              {...field}
+                              initialDate={field.value || new Date()}
+                              onChange={(val) => {
+                                setFieldValue(field.name, val);
+                              }}
+                            />
+                            {touched[field.name] && errors[field.name] && (
+                              <Text color="tomato" fontSize="xs">
+                                {errors[field.name]}
+                              </Text>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </Box>
+                    <Box mb={5}>
+                      <Text color={"#606060"} pb={3} fontSize={"sm"}>
+                        Position
+                      </Text>
+                      <Field
+                        id="position"
+                        name="position"
+                        placeholder="position"
+                        render={({ field, form: { touched, errors } }) => (
+                          <div>
+                            <Input
+                              {...field}
+                              placeholder="Enter your position"
+                              size={"lg"}
+                              bg={"#F5F6FA"}
+                              fontSize={"sm"}
+                              border={"1px solid #D5D5D5"}
+                              borderRadius={10}
+                            />
+                            {touched[field.name] && errors[field.name] && (
+                              <Text color="tomato" fontSize="xs">
+                                {errors[field.name]}
+                              </Text>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </Box>
+                    <Box mb={5}>
+                      <Text color={"#606060"} pb={3} fontSize={"sm"}>
+                        Gender
+                      </Text>
+                      <Field
+                        id="gender"
+                        name="gender"
+                        placeholder="gender"
+                        render={({ field, form: { touched, errors } }) => (
+                          <div>
+                            <Select
+                              {...field}
+                              placeholder="Select your gender"
+                              size={"lg"}
+                              bg={"#F5F6FA"}
+                              fontSize={"sm"}
+                              border={"1px solid #D5D5D5"}
+                              borderRadius={10}
+                              width={"50%"}
+                            >
+                              <option value="male">Male</option>
+                              <option value="female">Female</option>
+                              <option value="other">Other</option>
+                            </Select>
+                            {touched[field.name] && errors[field.name] && (
+                              <Text color="tomato" fontSize="xs">
+                                {errors[field.name]}
+                              </Text>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </Box>
+                    <Box width={"100%"} mt={4}>
+                      {updateUserProfileIsLoading && (
+                        <Spinner
+                          thickness="4px"
+                          speed="0.65s"
+                          emptyColor="gray.200"
+                          color="blue.500"
+                        />
+                      )}
+                      <Button
+                        className={styles.updatedbtn}
+                        variant="solid"
+                        w={"100%"}
+                        display={"block"}
+                        mx={"auto"}
+                        borderRadius={10}
+                        type="submit"
+                      >
+                        Update Now
+                      </Button>
+                    </Box>
+                    {/* </Form> */}
+                  </form>
+                )}
+              </Formik>
+            </Box>
+
+            <Box width={"50%"} maxWidth={"470px"} pl={5}>
+              {socialAuth && socialAuth.hasSlack ? (
+                <Alert status="success" variant="subtle" width={"60%"} mb={5}>
+                  <AlertIcon />
+                  <Image src={slackLogo} style={{ width: "25px" }} />
+                  <AlertDescription p={2}>Slack connected</AlertDescription>
+                </Alert>
+              ) : (
+                <Button
+                  className={styles.slackBtn}
+                  colorScheme="white"
+                  variant="solid"
+                  mt={5}
+                  w={"60%"}
+                  p={"0 15px"}
+                  justifyContent={"flex-start"}
+                  leftIcon={<Image src={slackLogo} style={{ width: "25px" }} />}
+                  onClick={() =>
+                    (location.href =
+                      "https://slack.com/oauth/v2/authorize?client_id=4578727160275.4581313497012&scope=channels:history,channels:read,chat:write,commands,conversations.connect:manage,conversations.connect:read,conversations.connect:write,groups:history,groups:read,im:history,users:read,users:read.email,channels:write.invites,groups:write.invites,mpim:write.invites,channels:manage,groups:write,im:write,mpim:write&user_scope=channels:write,channels:write.invites")
+                  }
+                  isDisabled={socialAuth && socialAuth.hasSlack}
+                >
+                  Add to Slack
+                </Button>
+              )}
+
+              {socialAuth && socialAuth.hasGoogle ? (
+                <Alert status="success" variant="subtle" width={"60%"} mb={5}>
+                  <AlertIcon />
+                  <Image src={googleLogo} style={{ width: "25px" }} />
+                  <AlertDescription p={2}>Google connected</AlertDescription>
+                </Alert>
+              ) : (
+                <Button
+                  className={styles.googleBtn}
+                  colorScheme="white"
+                  variant="solid"
+                  mt={5}
+                  w={"60%"}
+                  p={"0 15px"}
+                  justifyContent={"flex-start"}
+                  leftIcon={
+                    <Image src={googleLogo} style={{ width: "25px" }} />
+                  }
+                  onClick={getCode}
+                  isDisabled={socialAuth && socialAuth.hasGoogle}
+                >
+                  Connect
+                </Button>
+              )}
 
               <Button
                 className={styles.reachBtn}
@@ -337,26 +586,81 @@ function Settings() {
                 p={"0 15px"}
                 justifyContent={"flex-start"}
                 leftIcon={<Image src={mydailyLogo} style={{ width: "25px" }} />}
+                isDisabled={true}
               >
                 Reach out to us
               </Button>
-              {/*<input type="submit" onClick={getCode} value="Get Events"/>*/}
-            </Box>
-            <Box width={"100%"} mt={4}>
+
               <Button
-                className={styles.updatedbtn}
+                className={styles.conflictManagerBtn}
+                colorScheme="pink"
                 variant="solid"
-                w={"100%"}
-                display={"block"}
-                mx={"auto"}
-                borderRadius={10}
+                mt={5}
+                w={"60%"}
+                p={"0 15px"}
+                justifyContent={"flex-start"}
+                leftIcon={
+                  <Icon fontSize="23px" color={"#000"}>
+                    <FaRegFrown />
+                  </Icon>
+                }
+                ref={btnRef}
+                onClick={onOpen}
               >
-                Update Now
+                Manager Conflict
               </Button>
+              {/*<input type="submit" onClick={getCode} value="Get Events"/>*/}
             </Box>
           </Flex>
         </CardBody>
       </Card>
+      <Drawer
+        isOpen={isOpen}
+        placement="right"
+        onClose={onClose}
+        finalFocusRef={btnRef}
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader>Incorrect Manager Name?</DrawerHeader>
+
+          <DrawerBody>
+            <Text mb={5}>
+              Does this manager&apos;s name look incorrect? Let us know if you
+              have any concerns.
+            </Text>
+            <Textarea
+              placeholder="Type here your concerns..."
+              h="500px"
+              onChange={(e) => setConcernText(e.target.value)}
+            />
+          </DrawerBody>
+
+          <DrawerFooter>
+            {userConcernsIsLoading && (
+              <Spinner
+                thickness="4px"
+                speed="0.65s"
+                emptyColor="gray.200"
+                color="blue.500"
+              />
+            )}
+            <Button variant="outline" mr={3} onClick={onClose}>
+              Cancel
+            </Button>
+
+            <Button
+              colorScheme="pink"
+              variant="solid"
+              isDisabled={concernText === ""}
+              onClick={() => handleSendConcern(concernText)}
+            >
+              Send
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </Box>
   );
 }
