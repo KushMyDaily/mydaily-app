@@ -1,7 +1,7 @@
 const db = require('../../models')
 const { WebClient } = require('@slack/web-api')
 const SlackService = require('../../service/slack.service')
-const { Op } = require('sequelize')
+const { Op, Sequelize } = require('sequelize')
 
 const {
     user: User,
@@ -24,11 +24,9 @@ module.exports = (slackApp) => {
         const user = await User.findOne({
             where: {
                 [Op.or]: [
-                    {
-                        workspaceUserIds: {
-                            [Op.contains]: [workspaceUser.id], // For array cases
-                        },
-                    },
+                    Sequelize.literal(
+                        `JSON_CONTAINS(workspaceUserIds, '["${workspaceUser.id}"]')`
+                    ),
                     {
                         workspaceUserIds: workspaceUser.id, // For single value cases
                     },
