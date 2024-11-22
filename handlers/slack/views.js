@@ -1,7 +1,7 @@
 const db = require('../../models')
 const { WebClient } = require('@slack/web-api')
 const SlackService = require('../../service/slack.service')
-const { Op, Sequelize } = require('sequelize')
+const { Op } = require('sequelize')
 
 const {
     user: User,
@@ -17,18 +17,16 @@ module.exports = (slackApp) => {
         console.log(body)
         console.log(payload)
 
-        const workspaceUser = await WorkspaceUser.findOne({
-            where: { userId: body?.user?.id },
-        })
-
         const user = await User.findOne({
             where: {
                 [Op.or]: [
-                    Sequelize.literal(
-                        `JSON_CONTAINS(workspaceUserIds, '[${workspaceUser.id}]')`
-                    ),
                     {
-                        workspaceUserIds: workspaceUser.id, // For single value cases
+                        workspaceUserIds: {
+                            [Op.contains]: [body?.user?.id], // For array cases
+                        },
+                    },
+                    {
+                        workspaceUserIds: body?.user?.id, // For single value cases
                     },
                 ],
             },
@@ -65,6 +63,9 @@ module.exports = (slackApp) => {
             console.log('>> Error saving survey answers:', error)
         }
 
+        const workspaceUser = await WorkspaceUser.findOne({
+            where: { userId: body?.user?.id },
+        })
         if (workspaceUser === null) {
             console.log('>> Error while finding workspace user: ')
             return
