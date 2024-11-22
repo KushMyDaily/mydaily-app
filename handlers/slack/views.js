@@ -25,7 +25,7 @@ module.exports = (slackApp) => {
             where: {
                 [Op.or]: [
                     Sequelize.literal(
-                        `JSON_CONTAINS(workspaceUserIds, '["${workspaceUser.id}"]')`
+                        `JSON_CONTAINS(workspaceUserIds, '[${workspaceUser.id}]')`
                     ),
                     {
                         workspaceUserIds: workspaceUser.id, // For single value cases
