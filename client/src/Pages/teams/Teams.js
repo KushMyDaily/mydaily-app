@@ -1,355 +1,43 @@
-import { Box, Card, CardBody, CardHeader, Flex, Text } from "@chakra-ui/react";
-import React, { useState, useCallback } from "react";
+import {
+  Box,
+  Card,
+  CardBody,
+  CardHeader,
+  Flex,
+  Text,
+  ButtonGroup,
+  IconButton,
+} from "@chakra-ui/react";
+import React, {
+  useState,
+  useEffect,
+  //useCallback
+} from "react";
+import moment from "moment";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  TransformWrapper,
+  TransformComponent,
+  useControls,
+} from "react-zoom-pan-pinch";
+import OrganizationChart from "../../comps/OrganizationChart";
 import PageHeader from "../../comps/PageHeader";
 import Color from "../../utils/Color";
 import Chart from "react-apexcharts";
 import Legends from "../../comps/Legends";
 import CircularProgressCard from "../../comps/CircularProgressCard";
-import TeamCard from "../../comps/TeamCard";
+//import TeamCard from "../../comps/TeamCard";
 import ProgressCard from "../../comps/ProgressCard";
 import ProgressBar from "../../comps/ProgressBar";
 import styles from "./teams.module.css";
-
-const CardData = [
-  {
-    heading: "Workload",
-    increase: true,
-    statusText: "Increase since last month",
-    imageUrl: "../images/check-icon.png",
-  },
-  {
-    heading: "Time boundaries",
-    increase: true,
-    statusText: "Increase since last month",
-    imageUrl: "../images/check-icon.png",
-  },
-  {
-    heading: "Communication",
-    increase: false,
-    statusText: "Decrease since last month",
-    imageUrl: "../images/red-error.png",
-  },
-  {
-    heading: "Autonomy",
-    increase: false,
-    statusText: "Decrease since last month",
-    imageUrl: "../images/yellow-error.png",
-  },
-  {
-    heading: "Relationships",
-    increase: true,
-    statusText: "Increase since last month",
-    imageUrl: "../images/check-icon.png",
-  },
-];
-
-const teams = [
-  {
-    id: "1",
-    role: "role1 Team",
-    progress: 9.4,
-    increase: true,
-    statusText: "Increase since last month",
-    heading: "Your second line reports",
-    managing: [
-      {
-        id: "a1",
-        role: "role1.1 Team",
-        name: "[name]",
-        progress: 9.4,
-        increase: true,
-        statusText: "Increase since last month",
-        heading: "Your third line reports",
-        managing: [
-          {
-            id: "b1",
-            role: "[role1.1.1 Team",
-            name: "[name]",
-            progress: 9.4,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "b2",
-            role: "role1.1.2 Team",
-            name: "[name]",
-            progress: 8.9,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "b3",
-            role: "role1.1.3 Team",
-            name: "[name]",
-            progress: 7.2,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-        ],
-      },
-      {
-        id: "a2",
-        role: "role1.2 Team",
-        name: "[name]",
-        progress: 8.9,
-        increase: true,
-        statusText: "Increase since last month",
-        managing: [
-          {
-            id: "b1",
-            role: "[role1.2.1 Team",
-            name: "[name]",
-            progress: 9.4,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "b2",
-            role: "role1.2.2 Team",
-            name: "[name]",
-            progress: 8.9,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "2",
-    role: "role2 Team",
-    progress: 8.9,
-    increase: false,
-    statusText: "Decrease since last month",
-    heading: "Your second line reports",
-    managing: [
-      {
-        id: "c1",
-        role: "role2.1 Team",
-        name: "[name]",
-        progress: 9.4,
-        increase: true,
-        statusText: "Increase since last month",
-        heading: "Your third line reports",
-        managing: [
-          {
-            id: "d1",
-            role: "role2.1.1 Team",
-            name: "[name]",
-            progress: 9.4,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "d2",
-            role: "role2.1.2 Team",
-            name: "[name]",
-            progress: 8.9,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "d3",
-            role: "role2.1.3 Team",
-            name: "[name]",
-            progress: 7.2,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "d3",
-            role: "role2.1.4 Team",
-            name: "[name]",
-            progress: 6.8,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-        ],
-      },
-      {
-        id: "c2",
-        role: "role2.2 Team",
-        name: "[name]",
-        progress: 8.9,
-        increase: true,
-        statusText: "Increase since last month",
-        managing: [
-          {
-            id: "d1",
-            role: "role2.2.1 Team",
-            name: "[name]",
-            progress: 9.4,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "d2",
-            role: "role2.2.2 Team",
-            name: "[name]",
-            progress: 8.9,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-        ],
-      },
-      {
-        id: "c3",
-        role: "role2.3 Team",
-        name: "[name]",
-        progress: 7.2,
-        increase: true,
-        statusText: "Increase since last month",
-        managing: [
-          {
-            id: "d1",
-            role: "role2.3.1 Team",
-            name: "[name]",
-            progress: 9.4,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "d2",
-            role: "role2.3.2 Team",
-            name: "[name]",
-            progress: 8.9,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "d3",
-            role: "role2.3.3 Team",
-            name: "[name]",
-            progress: 7.2,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "3",
-    role: "role3 Team",
-    progress: 7.2,
-    increase: false,
-    statusText: "Decrease since last month",
-    heading: "Your second line reports",
-    managing: [
-      {
-        id: "e1",
-        role: "role3.1 Team",
-        name: "[name]",
-        progress: 9.4,
-        increase: true,
-        statusText: "Increase since last month",
-        heading: "Your third line reports",
-        managing: [
-          {
-            id: "f1",
-            role: "role3.1.1 Team",
-            name: "[name]",
-            progress: 9.4,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "f2",
-            role: "role3.1.2 Team",
-            name: "[name]",
-            progress: 8.9,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "f3",
-            role: "role3.1.3 Team",
-            name: "[name]",
-            progress: 7.2,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "f4",
-            role: "role3.1.4 Team",
-            name: "[name]",
-            progress: 6.2,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "f5",
-            role: "role3.1.5 Team",
-            name: "[name]",
-            progress: 5.2,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-        ],
-      },
-      {
-        id: "e2",
-        role: "role3.2 Team",
-        name: "[name]",
-        progress: 8.9,
-        increase: true,
-        statusText: "Increase since last month",
-        managing: [
-          {
-            id: "f1",
-            role: "role3.2.1 Team",
-            name: "[name]",
-            progress: 9.4,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "f2",
-            role: "role3.2.2 Team",
-            name: "[name]",
-            progress: 8.9,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "f3",
-            role: "role3.2.3 Team",
-            name: "[name]",
-            progress: 7.2,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-        ],
-      },
-      {
-        id: "e3",
-        role: "role3.3 Team",
-        name: "[name]",
-        progress: 7.2,
-        increase: true,
-        statusText: "Increase since last month",
-        managing: [
-          {
-            id: "f1",
-            role: "role3.3.1 Team",
-            name: "[name]",
-            progress: 9.4,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-          {
-            id: "f2",
-            role: "role3.3.2 Team",
-            name: "[name]",
-            progress: 8.9,
-            increase: true,
-            statusText: "Increase since last month",
-          },
-        ],
-      },
-    ],
-  },
-];
+import {
+  managerViewStat,
+  getSubordinatesforms,
+} from "../../redux/features/statsData/statDataThunk";
+import goodIcon from "../../assets/img/check-icon.png";
+import needAttentionError from "../../assets/img/red-error.png";
+import coutionError from "../../assets/img/yellow-error.png";
+import { LuZoomIn, LuZoomOut, LuRefreshCw } from "react-icons/lu";
 
 const OPTIONS = {
   chart: {
@@ -461,30 +149,240 @@ const OPTIONS = {
 
 function Teams() {
   // eslint-disable-next-line no-unused-vars
-  const [series, setSeries] = useState([
-    {
-      data: [5, 4.8, 2.7, 2.9, 3.6, 4, 4.6, 4.8, 5.1, 5.3, 2, 0.75],
-    },
-  ]);
-
-  const [secondReport, setSecondReport] = useState([]);
-  const [thirdReport, setThirdReport] = useState([]);
-  const [activeReport, setActiveReport] = useState(null);
-  const [activeSecondReport, setActiveSecondReport] = useState(null);
-
-  const handleClick = useCallback((personId) => {
-    setActiveReport(personId);
-    const report2 = teams?.find((item) => item.id === personId);
-    setSecondReport([...report2.managing]);
-    setThirdReport([]);
+  const [monthSeries, setMonthSeries] = useState([]);
+  const [managerData, setManagerData] = useState({});
+  const { user } = useSelector((state) => state.signin);
+  const [organizationData, setOrganizationData] = useState({
+    name: user.username,
+    children: [],
   });
+  const {
+    //managerViewStatIsLoading,
+    //managerViewStatError,
+    manager,
+    subordinatesForms,
+  } = useSelector((state) => state.statsData);
 
-  const handle2Click = useCallback((personId) => {
-    setActiveSecondReport(personId);
-    // const report3 = secondReport?.find((item) => item.id === personId);
-    // setThirdReport([...report3?.managing]);
-    // console.log(thirdReport, '[thirdReport');
-  });
+  const dispatch = useDispatch();
+
+  const [stressFactors, setStressFactors] = useState([]);
+
+  useEffect(() => {
+    dispatch(
+      managerViewStat({
+        userId: user.id,
+        date: getPreviousWeekday(new Date()),
+      }),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (manager) {
+      setManagerData(manager);
+      const mappedData = [
+        {
+          data: Array.from({ length: 12 }, (_, index) => {
+            const monthData = manager.perMonth.find(
+              (entry) => entry.month === index + 1,
+            );
+            return monthData ? parseFloat(monthData.score) : 0;
+          }),
+        },
+      ];
+      setMonthSeries(mappedData);
+
+      if (manager.stressFactors) {
+        const mappedStressFactors = [];
+        Object.entries(manager.stressFactors).forEach(([key, value]) => {
+          const stressFactor = {
+            heading: getHeadingByKey(key),
+            increase: true,
+            statusText: "Increase since last month",
+            imageUrl: getImageByValue(value),
+          };
+          mappedStressFactors.push(stressFactor);
+        });
+        setStressFactors(mappedStressFactors);
+      }
+
+      if (manager.subordinatesForm) {
+        organizationData.children = manager.subordinatesForm.map(
+          (subordinate) => ({
+            id: subordinate.id,
+            name: subordinate.userName,
+            form: subordinate.form,
+          }),
+        );
+        setOrganizationData(organizationData);
+      }
+    }
+  }, [manager]);
+
+  useEffect(() => {
+    const mappedSubordinatesData = mapSubordinateData(
+      organizationData,
+      subordinatesForms,
+    );
+
+    setOrganizationData({
+      name: user.username,
+      children: mappedSubordinatesData,
+    });
+  }, [subordinatesForms]);
+
+  // Function to get the last weekday from a given date
+  function getPreviousWeekday(date) {
+    let previousDate = moment(date).subtract(1, "days");
+
+    // If the day is Saturday (6) or Sunday (0), adjust to the last weekday (Friday)
+    if (previousDate.day() === 6) {
+      // If it's Saturday, subtract 1 more day to get Friday
+      previousDate = previousDate.subtract(1, "days");
+    } else if (previousDate.day() === 0) {
+      // If it's Sunday, subtract 2 more days to get Friday
+      previousDate = previousDate.subtract(2, "days");
+    }
+
+    return previousDate.format("YYYY-MM-DD");
+  }
+
+  const defineColor = (score) => {
+    switch (true) {
+      case score >= 9.5 && score <= 10:
+        return Color.Amazing;
+      case score >= 7.5 && score < 9.5:
+        return Color.Great;
+      case score >= 5.5 && score < 7.5:
+        return Color.Good;
+      case score >= 3.5 && score < 5.5:
+        return Color.Alright;
+      case score >= 1.5 && score < 3.5:
+        return Color.Low;
+      case score >= 0 && score < 1.5:
+        return Color.Exhausted;
+      default:
+        return "#000000"; // Handle cases outside defined ranges
+    }
+  };
+
+  const defineBGColor = (score) => {
+    switch (true) {
+      case score >= 9.5 && score <= 10:
+        return Color.AmazingBg;
+      case score >= 7.5 && score < 9.5:
+        return Color.GreatBg;
+      case score >= 5.5 && score < 7.5:
+        return Color.GoodBg;
+      case score >= 3.5 && score < 5.5:
+        return Color.AlrightBg;
+      case score >= 1.5 && score < 3.5:
+        return Color.LowBg;
+      case score >= 0 && score < 1.5:
+        return Color.ExhaustedBg;
+      default:
+        return "#000000"; // Handle cases outside defined ranges
+    }
+  };
+
+  const defineClass = (score) => {
+    switch (true) {
+      case score >= 9.5 && score <= 10:
+        return "amazing";
+      case score >= 7.5 && score < 9.5:
+        return "great";
+      case score >= 5.5 && score < 7.5:
+        return "good";
+      case score >= 3.5 && score < 5.5:
+        return "alright";
+      case score >= 1.5 && score < 3.5:
+        return "low";
+      case score >= 0 && score < 1.5:
+        return "exhausted";
+      default:
+        return ""; // Handle cases outside defined ranges
+    }
+  };
+
+  const getHeadingByKey = (key) => {
+    switch (key) {
+      case "workload":
+        return "Workload";
+      case "autonomy":
+        return "Autonomy";
+      case "communication":
+        return "Communication";
+      case "relationship":
+        return "Relationships";
+      case "timeBoundries":
+        return "Time Boundaries";
+      default:
+        return "";
+    }
+  };
+
+  const getImageByValue = (value) => {
+    switch (true) {
+      case value >= 7.5:
+        return goodIcon;
+      case value >= 5.5 && value < 7.5:
+        return coutionError;
+      case value >= 0 && value < 5.5:
+        return needAttentionError;
+      default:
+        return ""; // Handle cases outside defined ranges
+    }
+  };
+
+  const Controls = () => {
+    const { zoomIn, zoomOut, resetTransform } = useControls();
+    return (
+      <>
+        <ButtonGroup variant="outline" size="sm" isAttached pb={8}>
+          <IconButton aria-label="zoom in" onClick={() => zoomIn()}>
+            <LuZoomIn />
+          </IconButton>
+          <IconButton aria-label="zoom out" onClick={() => zoomOut()}>
+            <LuZoomOut />
+          </IconButton>
+          <IconButton aria-label="reset" onClick={() => resetTransform()}>
+            <LuRefreshCw />
+          </IconButton>
+        </ButtonGroup>
+      </>
+    );
+  };
+
+  const onHandleExpand = (userId) => {
+    if (userId) {
+      dispatch(
+        getSubordinatesforms({
+          userId: userId,
+          date: getPreviousWeekday(new Date()),
+        }),
+      );
+    }
+  };
+
+  function mapSubordinateData(initialData, managerData) {
+    return initialData.children.map((child) => {
+      // Check if the current child matches the managerId
+
+      if (child.id === managerData.data.managerId) {
+        // Push subordinates as children
+        const updatedChildren = managerData.data.subordinates.map((sub) => ({
+          id: sub.id,
+          name: sub.userName,
+          form: sub.form,
+        }));
+        console.log(updatedChildren);
+        return {
+          ...child,
+          children: updatedChildren, // Add subordinates to children
+        };
+      }
+      return { ...child, children: [] }; // Ensure non-matching nodes also have a children key
+    });
+  }
 
   return (
     <Box>
@@ -494,7 +392,6 @@ function Teams() {
         filterOption={false}
         toolTipContent="Welcome to the Your Team Page!<br/><br/> Accessible only by managers like yourself. Here, you can monitor your team's wellbeing in real-time, and understand the impact of decisions, events, and performance on your team.<br/><br/> Click on the three dots to change the time frame, or on a team member's name for more details. It's important to take action when negative trends arise, by encouraging positive behaviors and addressing any problems.<br/><br/> Remember not to share personal information. Let us support you in creating a healthier and happier work environment for everyone on your team."
       />
-
       <Legends />
       <Flex className={styles.chartRow}>
         <Box className={styles.chartCol}>
@@ -502,11 +399,11 @@ function Teams() {
             <Box className={styles.chartColInner}>
               <CircularProgressCard
                 heading="Team Form"
-                percentage="7.2"
+                percentage={managerData.formScore || 0}
                 increase={false}
                 statusText="Increase since last week"
-                color={Color.Good}
-                bgColor={Color.GoodBg}
+                color={defineColor(managerData.formScore || 0)}
+                bgColor={defineBGColor(managerData.formScore || 0)}
               />
             </Box>
             <Box className={styles.chartColInner}>
@@ -534,25 +431,25 @@ function Teams() {
                   <Box mb={12}>
                     <ProgressBar
                       heading="Last 30 days"
-                      rating="7.5"
-                      textColor={Color.Good}
-                      progressColor="good"
+                      rating={managerData.last30Days || 0}
+                      textColor={defineColor(managerData.last30Days || 0)}
+                      progressColor={defineClass(managerData.last30Days || 0)}
                     />
                   </Box>
                   <Box mb={12}>
                     <ProgressBar
                       heading="Last 90 days"
-                      rating="6.6"
-                      textColor={Color.Alright}
-                      progressColor="alright"
+                      rating={managerData.last90Days || 0}
+                      textColor={defineColor(managerData.last90Days || 0)}
+                      progressColor={defineClass(managerData.last90Days || 0)}
                     />
                   </Box>
                   <Box>
                     <ProgressBar
                       heading="All time"
-                      rating="6.6"
-                      textColor={Color.Alright}
-                      progressColor="alright"
+                      rating={managerData.allTime || 0}
+                      textColor={defineColor(managerData.allTime || 0)}
+                      progressColor={defineClass(managerData.allTime || 0)}
                     />
                   </Box>
                 </CardBody>
@@ -570,7 +467,7 @@ function Teams() {
               <Box className="ChartBox">
                 <Chart
                   options={OPTIONS}
-                  series={series}
+                  series={monthSeries}
                   type="bar"
                   width="100%"
                   height={269}
@@ -581,7 +478,7 @@ function Teams() {
         </Box>
       </Flex>
       <Flex className={styles.cardRow}>
-        {CardData.map((item) => (
+        {stressFactors.map((item) => (
           <Box key={item.heading} className={styles.cardCol}>
             <ProgressCard
               heading={item.heading}
@@ -611,77 +508,33 @@ function Teams() {
         >
           Your direct reports
         </Text>
-        <Flex className={styles.teamRow}>
-          {teams.map((items) => (
-            <Box key={items.id} className={styles.teamCol}>
-              <TeamCard
-                heading={items.role}
-                subheading={items.name}
-                percentage={items.progress}
-                increase={items.increase}
-                statusText="Increase since last week"
-                onClick={handleClick}
-                active={items.id === activeReport ? "true" : "false"}
-                personId={items.id}
-              />
-            </Box>
-          ))}
-        </Flex>
-        {secondReport.length !== 0 && (
-          <Text
-            fontSize={"14px"}
-            lineHeight={"20px"}
-            marginBottom={2.5}
-            color={"#000000"}
-            opacity={"0.4"}
+      </Box>
+      <Box
+        className={styles.chartOrg}
+        sx={{
+          position: "relative",
+          width: "100%",
+          height: "100%", // Or any fixed/relative height
+          overflow: "hidden",
+        }}
+      >
+        <Card className={styles.DetailCard}>
+          <TransformWrapper
+            options={{
+              limitToBounds: true, // Keeps the chart within bounds
+            }}
           >
-            Your second line reports
-          </Text>
-        )}
-        <Flex className={styles.teamRow}>
-          {secondReport?.map((items) => (
-            <Box key={items.id} className={styles.teamCol}>
-              <TeamCard
-                heading={items.role}
-                subheading={items.name}
-                percentage={items.progress}
-                increase={items.increase}
-                statusText="Increase since last week"
-                onClick={handle2Click}
-                active={items.id === activeSecondReport ? "true" : "false"}
-                personId={items.id}
+            <Controls />
+            <TransformComponent
+              wrapperStyle={{ width: "100%", height: "100%" }}
+            >
+              <OrganizationChart
+                data={organizationData}
+                onHandleExapand={onHandleExpand}
               />
-            </Box>
-          ))}
-        </Flex>
-        {thirdReport.length !== 0 && (
-          <Text
-            fontSize={"14px"}
-            lineHeight={"20px"}
-            marginBottom={2.5}
-            color={"#000000"}
-            opacity={"0.4"}
-          >
-            Your third line reports
-          </Text>
-        )}
-        <Flex className={styles.teamRow}>
-          {thirdReport?.map(
-            (items) =>
-              items.length !== 0 && (
-                <Box key={items.id} className={styles.teamCol}>
-                  <TeamCard
-                    heading={items.role}
-                    subheading={items.name}
-                    percentage={items.progress}
-                    increase={items.increase}
-                    statusText="Increase since last week"
-                    onClick={() => {}}
-                  />
-                </Box>
-              ),
-          )}
-        </Flex>
+            </TransformComponent>
+          </TransformWrapper>
+        </Card>
       </Box>
     </Box>
   );

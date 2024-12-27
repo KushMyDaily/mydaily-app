@@ -55,6 +55,11 @@
   width: 25%;
 }
 
+.chartOrg {
+  padding: 0 15px;
+  width: 100%;
+}
+
 @media (max-width: 1439px) {
   .cardRow {
     margin: 0 -15px;

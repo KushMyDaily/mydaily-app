@@ -10,7 +10,13 @@ const {
     statisticsByDate: StatisticsByDate,
     user: User,
 } = db
-const { Op, Sequelize } = require('sequelize')
+const { Op, Sequelize, fn, col } = require('sequelize')
+
+/*
+===================
+  Dashboard view
+=====================
+*/
 
 const dailyAverageWeight = [
     0.16, 0.14, 0.13, 0.12, 0.1, 0.08, 0.06, 0.05, 0.04, 0.03, 0.03, 0.02, 0.02,
@@ -877,6 +883,419 @@ const surveyScoreCalculate = async (userId, surveyIds, date, answerType) => {
     }
 }
 
+/*
+===================
+  Manager view
+=====================
+*/
+async function getTeamFormData(req, res) {
+    const { userId, date } = req.body
+
+    if (!userId) {
+        return res.status(401).json({ error: 'User is required' })
+    }
+
+    if (!date) {
+        return res.status(401).json({ error: 'Date is required' })
+    }
+
+    const subordinates = await getSubordinates(userId)
+
+    if (!subordinates) {
+        return res.status(404).json({ error: 'Subordinates not found' })
+    }
+
+    if (subordinates.length === 0) {
+        return res.status(404).json({ error: 'No subordinates found' })
+    }
+
+    if (subordinates.length > 0) {
+        // This section use to fetch second layer subordinates form
+        const sub = await getAllsubordinatesFormData(subordinates, date)
+
+        // This section use to fetch first layer subordinates form and stats
+        const data = await fetchAllRanges(subordinates, date)
+        if (data) {
+            const managerData = {
+                teamForm: 0,
+                stressFactors: {
+                    workload: 0,
+                    relationship: 0,
+                    timeBoundries: 0,
+                    autonomy: 0,
+                    communication: 0,
+                },
+                last30Days: 0,
+                last90Days: 0,
+                allTime: 0,
+                perMonth: [],
+                subordinatesForm: sub,
+            }
+
+            if (data.existing) {
+                managerData.teamForm =
+                    data.existing.totalYourForm / data.existing.countRecords > 0
+                        ? (
+                              data.existing.totalYourForm /
+                              data.existing.countRecords
+                          ).toFixed(2)
+                        : 0
+                managerData.stressFactors.workload =
+                    data.existing.totalWorkload / data.existing.countRecords > 0
+                        ? (
+                              data.existing.totalWorkload /
+                              data.existing.countRecords
+                          ).toFixed(2)
+                        : 0
+                managerData.stressFactors.relationship =
+                    data.existing.totalRelationship /
+                        data.existing.countRecords >
+                    0
+                        ? (
+                              data.existing.totalRelationship /
+                              data.existing.countRecords
+                          ).toFixed(2)
+                        : 0
+                managerData.stressFactors.timeBoundries =
+                    data.existing.totalTimeBoundaries /
+                        data.existing.countRecords >
+                    0
+                        ? (
+                              data.existing.totalTimeBoundaries /
+                              data.existing.countRecords
+                          ).toFixed(2)
+                        : 0
+                managerData.stressFactors.autonomy =
+                    data.existing.totalAutonomy / data.existing.countRecords > 0
+                        ? (
+                              data.existing.totalAutonomy /
+                              data.existing.countRecords
+                          ).toFixed(2)
+                        : 0
+                managerData.stressFactors.communication =
+                    data.existing.totalCommunication /
+                        data.existing.countRecords >
+                    0
+                        ? (
+                              data.existing.totalCommunication /
+                              data.existing.countRecords
+                          ).toFixed(2)
+                        : 0
+            }
+
+            if (data.last30Days) {
+                managerData.last30Days =
+                    data.last30Days.totalYourForm /
+                        data.last30Days.countRecords >
+                    0
+                        ? (
+                              data.last30Days.totalYourForm /
+                              data.last30Days.countRecords
+                          ).toFixed(2)
+                        : 0
+            }
+
+            if (data.last90Days) {
+                managerData.last90Days =
+                    data.last90Days.totalYourForm /
+                        data.last90Days.countRecords >
+                    0
+                        ? (
+                              data.last90Days.totalYourForm /
+                              data.last90Days.countRecords
+                          ).toFixed(2)
+                        : 0
+            }
+
+            if (data.allTime) {
+                managerData.allTime =
+                    data.allTime.totalYourForm / data.allTime.countRecords > 0
+                        ? (
+                              data.allTime.totalYourForm /
+                              data.allTime.countRecords
+                          ).toFixed(2)
+                        : 0
+            }
+
+            if (data.perMonth) {
+                managerData.perMonth = data.perMonth.map((month) => {
+                    return {
+                        month: month.month,
+                        score:
+                            month.totalYourForm / month.countRecords > 0
+                                ? (
+                                      month.totalYourForm / month.countRecords
+                                  ).toFixed(2)
+                                : 0,
+                    }
+                })
+            }
+            return res.status(200).json(managerData)
+        }
+    }
+}
+
+const getUserName = async (userId) => {
+    if (userId) {
+        const user = await User.findByPk(userId)
+        if (user) {
+            return user.username
+        } else {
+            return null
+        }
+    }
+}
+
+const getSubordinates = async (userId) => {
+    if (userId) {
+        try {
+            const user = await User.findByPk(userId, {
+                include: [
+                    {
+                        model: User,
+                        as: 'Subordinates',
+                        through: { attributes: [] },
+                    },
+                ],
+                exclude: [
+                    'password',
+                    'companyId',
+                    'workspaceUserIds',
+                    'createdAt',
+                    'updatedAt',
+                    'resetToken',
+                ],
+            })
+            if (!user) {
+                throw new Error('User not found')
+            }
+            if (user.Subordinates.length > 0) {
+                const subordinatesIds = user.Subordinates.map(
+                    (subordinate) => subordinate.id
+                )
+                return subordinatesIds
+            } else {
+                console.log('User has no subordinates')
+                return null
+            }
+        } catch (error) {
+            console.log(error)
+            return null
+        }
+    } else {
+        console.log('User not found')
+        return null
+    }
+}
+
+/**
+ * Fetch statistics based on time range.
+ * @param {Array<number>} subordinatesIds - Array of subordinate user IDs.
+ * @param {string} date - The base date in 'YYYY-MM-DD' format for reference.
+ * @param {string} range - The time range ('existing', '30days', '90days', 'all').
+ * @returns {Promise<Object>} - Statistics for the given time range.
+ */
+const fetchStatistics = async (subordinatesIds, date, range) => {
+    const today = new Date()
+    let dateCondition = {}
+    let groupByMonth = false
+
+    switch (range) {
+        case 'existing': {
+            // Exact day
+            dateCondition = {
+                createdAt: {
+                    [Op.between]: [
+                        new Date(`${date} 00:00:00`),
+                        new Date(`${date} 23:59:59`),
+                    ],
+                },
+            }
+            break
+        }
+        case '30days': {
+            // Last 30 days
+            const thirtyDaysAgo = new Date(today)
+            thirtyDaysAgo.setDate(today.getDate() - 30)
+            dateCondition = {
+                createdAt: {
+                    [Op.between]: [thirtyDaysAgo, today],
+                },
+            }
+            break
+        }
+        case '90days': {
+            // Last 90 days
+            const ninetyDaysAgo = new Date(today)
+            ninetyDaysAgo.setDate(today.getDate() - 90)
+            dateCondition = {
+                createdAt: {
+                    [Op.between]: [ninetyDaysAgo, today],
+                },
+            }
+            break
+        }
+        case 'all': {
+            // All-time data
+            dateCondition = {} // No condition for all time
+            break
+        }
+        case 'perMonth': {
+            // Per month for the current year
+            const startOfYear = new Date(today.getFullYear(), 0, 1) // Jan 1st of the current year
+            const endOfYear = new Date(today.getFullYear(), 11, 31, 23, 59, 59) // Dec 31st of the current year
+            dateCondition = {
+                createdAt: {
+                    [Op.between]: [startOfYear, endOfYear],
+                },
+            }
+            groupByMonth = true
+            break
+        }
+        default:
+            throw new Error('Invalid time range specified')
+    }
+
+    // Query the database
+    const attributes = groupByMonth
+        ? [
+              [fn('MONTH', col('createdAt')), 'month'], // Extract the month
+              [fn('SUM', col('workload')), 'totalWorkload'],
+              [fn('SUM', col('relationship')), 'totalRelationship'],
+              [fn('SUM', col('timeBoundaries')), 'totalTimeBoundaries'],
+              [fn('SUM', col('autonomy')), 'totalAutonomy'],
+              [fn('SUM', col('communication')), 'totalCommunication'],
+              [fn('SUM', col('yourForm')), 'totalYourForm'],
+              [fn('COUNT', col('id')), 'countRecords'],
+          ]
+        : [
+              [fn('SUM', col('workload')), 'totalWorkload'],
+              [fn('SUM', col('relationship')), 'totalRelationship'],
+              [fn('SUM', col('timeBoundaries')), 'totalTimeBoundaries'],
+              [fn('SUM', col('autonomy')), 'totalAutonomy'],
+              [fn('SUM', col('communication')), 'totalCommunication'],
+              [fn('SUM', col('yourForm')), 'totalYourForm'],
+              [fn('COUNT', col('id')), 'countRecords'],
+          ]
+
+    const result = await StatisticsByDate.findAll({
+        attributes,
+        where: {
+            userId: { [Op.in]: subordinatesIds },
+            ...dateCondition, // Apply date condition dynamically
+        },
+        ...(groupByMonth && { group: [fn('MONTH', col('createdAt'))] }), // Group by month if needed
+        raw: true, // Get raw data instead of Sequelize instances
+    })
+
+    return groupByMonth ? result : result[0] // Return grouped data for perMonth, else a single result
+}
+
+/**
+ * Fetch data for all ranges (existing, 30 days, 90 days, all time).
+ */
+const fetchAllRanges = async (subordinatesIds, date) => {
+    const results = {
+        existing: await fetchStatistics(subordinatesIds, date, 'existing'),
+        last30Days: await fetchStatistics(subordinatesIds, date, '30days'),
+        last90Days: await fetchStatistics(subordinatesIds, date, '90days'),
+        allTime: await fetchStatistics(subordinatesIds, date, 'all'),
+        perMonth: await fetchStatistics(subordinatesIds, date, 'perMonth'),
+    }
+
+    return results
+}
+
+const fetchSubordinatesForm = async (subordinatesIds, date) => {
+    const results = {
+        existing: await fetchStatistics(subordinatesIds, date, 'existing'),
+    }
+    return results
+}
+
+/*
+========== Get subordinates form data ====================
+*/
+const getSubordinatesFormData = async (req, res) => {
+    const { userId, date } = req.body
+
+    if (!userId) {
+        return res.status(401).json({ error: 'User is required' })
+    }
+    const subordinates = await getSubordinates(userId)
+    if (!subordinates) {
+        return res.status(404).json({ error: 'Subordinates not found' })
+    }
+    if (subordinates.length === 0) {
+        return res.status(404).json({ error: 'No subordinates found' })
+    }
+
+    if (subordinates.length > 0) {
+        const results = await getAllsubordinatesFormData(subordinates, date)
+
+        return res
+            .status(200)
+            .json({ data: { managerId: userId, subordinates: results } })
+    }
+}
+
+const getAllsubordinatesFormData = async (subordinates, date) => {
+    const sub = []
+
+    if (!subordinates || subordinates.length === 0) {
+        return sub // Return an empty array if no subordinates
+    }
+
+    await Promise.all(
+        subordinates.map(async (subordinate) => {
+            try {
+                // Fetch subordinate data
+                const subordinatesData = await getSubordinates(subordinate)
+
+                // Initialize default form value
+                let form = null
+
+                if (subordinatesData && subordinatesData.length > 0) {
+                    // Fetch form data for subordinates
+                    const formData = await fetchSubordinatesForm(
+                        subordinatesData,
+                        date
+                    )
+
+                    if (formData?.existing?.totalYourForm) {
+                        form = formData.existing.totalYourForm.toFixed(2)
+                    }
+                }
+
+                // Fetch user name once
+                const userName = await getUserName(subordinate)
+
+                // Push result into sub array
+                sub.push({
+                    id: subordinate,
+                    userName,
+                    form,
+                })
+            } catch (error) {
+                console.error(
+                    `Error processing subordinate ${subordinate}:`,
+                    error
+                )
+
+                // Handle errors gracefully
+                const userName = await getUserName(subordinate)
+                sub.push({
+                    id: subordinate,
+                    userName,
+                    form: null,
+                })
+            }
+        })
+    )
+
+    return sub
+}
+
 module.exports = {
     getStatWellBeingScore: getStatWellBeingScore,
     getStatStressFactorsScore: getStatStressFactorsScore,
@@ -886,4 +1305,6 @@ module.exports = {
     getWellBeingRelatedData: getWellBeingRelatedData,
     getMonthByFormData: getMonthByFormData,
     getcalenderData: getcalenderData,
+    getTeamFormData: getTeamFormData,
+    getSubordinatesFormData: getSubordinatesFormData,
 }

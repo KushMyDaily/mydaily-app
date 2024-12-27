@@ -12,6 +12,12 @@ import {
   calendarRequest,
   calendarSuccess,
   calendarFailure,
+  managerViewRequest,
+  managerViewSuccess,
+  managerViewFailure,
+  getSubordinatesformsSuccess,
+  getSubordinatesformsFailure,
+  getSubordinatesformsRequest,
 } from "./statDataSlice";
 import { API } from "../../../services/apiBuilder";
 
@@ -63,6 +69,38 @@ export const calendaStat = createAsyncThunk(
       dispatch(calendarSuccess(response.data));
     } catch (error) {
       dispatch(calendarFailure(error));
+    }
+  },
+);
+
+export const managerViewStat = createAsyncThunk(
+  `stat/managerViewStat/graph`,
+  async (data, { dispatch }) => {
+    dispatch(managerViewRequest());
+    try {
+      const response = await API.post(
+        "/api/stat/manager/teamforms/graph/",
+        data,
+      );
+      dispatch(managerViewSuccess(response.data));
+    } catch (error) {
+      dispatch(managerViewFailure(error));
+    }
+  },
+);
+
+export const getSubordinatesforms = createAsyncThunk(
+  `stat/getSubordinatesforms/graph`,
+  async (data, { dispatch }) => {
+    dispatch(getSubordinatesformsRequest());
+    try {
+      const response = await API.post(
+        "/api/stat/manager/subordinatesforms/graph/",
+        data,
+      );
+      dispatch(getSubordinatesformsSuccess(response.data));
+    } catch (error) {
+      dispatch(getSubordinatesformsFailure(error));
     }
   },
 );
