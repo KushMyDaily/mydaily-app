@@ -13,6 +13,12 @@ const initialState = {
   calendarLoading: false,
   calendarError: null,
   calendar: null,
+  managerViewLoading: false,
+  managerViewError: null,
+  manager: null,
+  subordinatesFormsLoading: false,
+  subordinatesFormsError: null,
+  subordinatesForms: null,
 };
 
 const statDataSlice = createSlice({
@@ -67,6 +73,30 @@ const statDataSlice = createSlice({
       state.calendarLoading = false;
       state.calendarError = action.payload;
     },
+    managerViewRequest: (state) => {
+      state.managerViewLoading = true;
+      state.managerViewError = null;
+    },
+    managerViewSuccess: (state, action) => {
+      state.managerViewLoading = false;
+      state.manager = action.payload;
+    },
+    managerViewFailure: (state, action) => {
+      state.managerViewLoading = false;
+      state.managerViewError = action.payload;
+    },
+    getSubordinatesformsRequest: (state) => {
+      state.subordinatesFormsLoading = true;
+      state.subordinatesFormsError = null;
+    },
+    getSubordinatesformsSuccess: (state, action) => {
+      state.subordinatesFormsLoading = false;
+      state.subordinatesForms = action.payload;
+    },
+    getSubordinatesformsFailure: (state, action) => {
+      state.subordinatesFormsLoading = false;
+      state.subordinatesFormsError = action.payload;
+    },
   },
 });
 
@@ -83,6 +113,12 @@ export const {
   calendarRequest,
   calendarSuccess,
   calendarFailure,
+  managerViewRequest,
+  managerViewSuccess,
+  managerViewFailure,
+  getSubordinatesformsRequest,
+  getSubordinatesformsSuccess,
+  getSubordinatesformsFailure,
 } = statDataSlice.actions;
 
 export default statDataSlice.reducer;
