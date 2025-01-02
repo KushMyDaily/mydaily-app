@@ -1,4 +1,6 @@
 import {
+  Alert,
+  AlertIcon,
   Box,
   Card,
   CardBody,
@@ -157,8 +159,7 @@ function Teams() {
     children: [],
   });
   const {
-    //managerViewStatIsLoading,
-    //managerViewStatError,
+    //managerViewError,
     manager,
     subordinatesForms,
   } = useSelector((state) => state.statsData);
@@ -392,150 +393,167 @@ function Teams() {
         filterOption={false}
         toolTipContent="Welcome to the Your Team Page!<br/><br/> Accessible only by managers like yourself. Here, you can monitor your team's wellbeing in real-time, and understand the impact of decisions, events, and performance on your team.<br/><br/> Click on the three dots to change the time frame, or on a team member's name for more details. It's important to take action when negative trends arise, by encouraging positive behaviors and addressing any problems.<br/><br/> Remember not to share personal information. Let us support you in creating a healthier and happier work environment for everyone on your team."
       />
-      <Legends />
-      <Flex className={styles.chartRow}>
-        <Box className={styles.chartCol}>
-          <Flex className={styles.chartRowInner}>
-            <Box className={styles.chartColInner}>
-              <CircularProgressCard
-                heading="Team Form"
-                percentage={managerData.formScore || 0}
-                increase={false}
-                statusText="Increase since last week"
-                color={defineColor(managerData.formScore || 0)}
-                bgColor={defineBGColor(managerData.formScore || 0)}
-              />
+      {manager ? (
+        <>
+          <Legends />
+          <Flex className={styles.chartRow}>
+            <Box className={styles.chartCol}>
+              <Flex className={styles.chartRowInner}>
+                <Box className={styles.chartColInner}>
+                  <CircularProgressCard
+                    heading="Team Form"
+                    percentage={managerData.formScore || 0}
+                    increase={false}
+                    statusText="Increase since last week"
+                    color={defineColor(managerData.formScore || 0)}
+                    bgColor={defineBGColor(managerData.formScore || 0)}
+                  />
+                </Box>
+                <Box className={styles.chartColInner}>
+                  <Card className={styles.DetailCard}>
+                    <CardHeader p={0}>
+                      <Text
+                        fontSize={"22px"}
+                        fontWeight={"500"}
+                        lineHeight={"30px"}
+                        marginBottom={1}
+                      >
+                        Details
+                      </Text>
+                    </CardHeader>
+                    <CardBody p={0}>
+                      <Text
+                        fontSize={"14px"}
+                        lineHeight={"20px"}
+                        marginBottom={10}
+                        color={"#000000"}
+                        opacity={"0.4"}
+                      >
+                        Average form score
+                      </Text>
+                      <Box mb={12}>
+                        <ProgressBar
+                          heading="Last 30 days"
+                          rating={managerData.last30Days || 0}
+                          textColor={defineColor(managerData.last30Days || 0)}
+                          progressColor={defineClass(
+                            managerData.last30Days || 0,
+                          )}
+                        />
+                      </Box>
+                      <Box mb={12}>
+                        <ProgressBar
+                          heading="Last 90 days"
+                          rating={managerData.last90Days || 0}
+                          textColor={defineColor(managerData.last90Days || 0)}
+                          progressColor={defineClass(
+                            managerData.last90Days || 0,
+                          )}
+                        />
+                      </Box>
+                      <Box>
+                        <ProgressBar
+                          heading="All time"
+                          rating={managerData.allTime || 0}
+                          textColor={defineColor(managerData.allTime || 0)}
+                          progressColor={defineClass(managerData.allTime || 0)}
+                        />
+                      </Box>
+                    </CardBody>
+                  </Card>
+                </Box>
+              </Flex>
             </Box>
-            <Box className={styles.chartColInner}>
-              <Card className={styles.DetailCard}>
-                <CardHeader p={0}>
+
+            <Box className={styles.chartCol}>
+              <Card boxShadow={"none"} borderRadius={"10px"}>
+                <CardBody padding={"30px 27px 16px"}>
                   <Text
                     fontSize={"22px"}
                     fontWeight={"500"}
                     lineHeight={"30px"}
-                    marginBottom={1}
                   >
-                    Details
+                    Average Form per month
                   </Text>
-                </CardHeader>
-                <CardBody p={0}>
-                  <Text
-                    fontSize={"14px"}
-                    lineHeight={"20px"}
-                    marginBottom={10}
-                    color={"#000000"}
-                    opacity={"0.4"}
-                  >
-                    Average form score
-                  </Text>
-                  <Box mb={12}>
-                    <ProgressBar
-                      heading="Last 30 days"
-                      rating={managerData.last30Days || 0}
-                      textColor={defineColor(managerData.last30Days || 0)}
-                      progressColor={defineClass(managerData.last30Days || 0)}
-                    />
-                  </Box>
-                  <Box mb={12}>
-                    <ProgressBar
-                      heading="Last 90 days"
-                      rating={managerData.last90Days || 0}
-                      textColor={defineColor(managerData.last90Days || 0)}
-                      progressColor={defineClass(managerData.last90Days || 0)}
-                    />
-                  </Box>
-                  <Box>
-                    <ProgressBar
-                      heading="All time"
-                      rating={managerData.allTime || 0}
-                      textColor={defineColor(managerData.allTime || 0)}
-                      progressColor={defineClass(managerData.allTime || 0)}
+                  <Box className="ChartBox">
+                    <Chart
+                      options={OPTIONS}
+                      series={monthSeries}
+                      type="bar"
+                      width="100%"
+                      height={269}
                     />
                   </Box>
                 </CardBody>
               </Card>
             </Box>
           </Flex>
-        </Box>
-
-        <Box className={styles.chartCol}>
-          <Card boxShadow={"none"} borderRadius={"10px"}>
-            <CardBody padding={"30px 27px 16px"}>
-              <Text fontSize={"22px"} fontWeight={"500"} lineHeight={"30px"}>
-                Average Form per month
-              </Text>
-              <Box className="ChartBox">
-                <Chart
-                  options={OPTIONS}
-                  series={monthSeries}
-                  type="bar"
-                  width="100%"
-                  height={269}
+          <Flex className={styles.cardRow}>
+            {stressFactors.map((item) => (
+              <Box key={item.heading} className={styles.cardCol}>
+                <ProgressCard
+                  heading={item.heading}
+                  increase={item.increase}
+                  statusText={item.statusText}
+                  imageUrl={item.imageUrl}
                 />
               </Box>
-            </CardBody>
-          </Card>
-        </Box>
-      </Flex>
-      <Flex className={styles.cardRow}>
-        {stressFactors.map((item) => (
-          <Box key={item.heading} className={styles.cardCol}>
-            <ProgressCard
-              heading={item.heading}
-              increase={item.increase}
-              statusText={item.statusText}
-              imageUrl={item.imageUrl}
-            />
+            ))}
+          </Flex>
+          <Box>
+            <Text
+              fontSize={"44px"}
+              fontWeight={"500"}
+              lineHeight={"52px"}
+              marginBottom={7}
+              color={"#000000"}
+            >
+              Your wellbeing factors
+            </Text>
+            <Text
+              fontSize={"14px"}
+              lineHeight={"20px"}
+              marginBottom={2.5}
+              color={"#000000"}
+              opacity={"0.4"}
+            >
+              Your direct reports
+            </Text>
           </Box>
-        ))}
-      </Flex>
-      <Box>
-        <Text
-          fontSize={"44px"}
-          fontWeight={"500"}
-          lineHeight={"52px"}
-          marginBottom={7}
-          color={"#000000"}
-        >
-          Your wellbeing factors
-        </Text>
-        <Text
-          fontSize={"14px"}
-          lineHeight={"20px"}
-          marginBottom={2.5}
-          color={"#000000"}
-          opacity={"0.4"}
-        >
-          Your direct reports
-        </Text>
-      </Box>
-      <Box
-        className={styles.chartOrg}
-        sx={{
-          position: "relative",
-          width: "100%",
-          height: "100%", // Or any fixed/relative height
-          overflow: "hidden",
-        }}
-      >
-        <Card className={styles.DetailCard}>
-          <TransformWrapper
-            options={{
-              limitToBounds: true, // Keeps the chart within bounds
+          <Box
+            className={styles.chartOrg}
+            sx={{
+              position: "relative",
+              width: "100%",
+              height: "100%", // Or any fixed/relative height
+              overflow: "hidden",
             }}
           >
-            <Controls />
-            <TransformComponent
-              wrapperStyle={{ width: "100%", height: "100%" }}
-            >
-              <OrganizationChart
-                data={organizationData}
-                onHandleExapand={onHandleExpand}
-              />
-            </TransformComponent>
-          </TransformWrapper>
-        </Card>
-      </Box>
+            <Card className={styles.DetailCard}>
+              <TransformWrapper
+                options={{
+                  limitToBounds: true, // Keeps the chart within bounds
+                }}
+              >
+                <Controls />
+                <TransformComponent
+                  wrapperStyle={{ width: "100%", height: "100%" }}
+                >
+                  <OrganizationChart
+                    data={organizationData}
+                    onHandleExapand={onHandleExpand}
+                  />
+                </TransformComponent>
+              </TransformWrapper>
+            </Card>
+          </Box>
+        </>
+      ) : (
+        <Alert status="error" mt={8}>
+          <AlertIcon />
+          No subordinate data is available for the selected manager.
+        </Alert>
+      )}
     </Box>
   );
 }

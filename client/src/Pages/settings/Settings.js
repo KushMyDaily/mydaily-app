@@ -65,6 +65,7 @@ function Settings() {
   //const [codeClient, setCodeClient] = useState({});
   const [uploadedImage, setUploadedImage] = useState(null);
   const [concernText, setConcernText] = useState("");
+  const [userProfileDetails, setUserProfileDetails] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = React.useRef();
 
@@ -98,6 +99,12 @@ function Settings() {
     dispatch(checkSocialAuth(user.id));
     dispatch(getProfile(user.id));
   }, []);
+
+  useEffect(() => {
+    if (userDetails) {
+      setUserProfileDetails(userDetails);
+    }
+  }, [userDetails]);
 
   const handleImageUpload = (imageDataURL) => {
     setUploadedImage(imageDataURL);
@@ -305,15 +312,23 @@ function Settings() {
             <Box width={"50%"} maxWidth={"470px"} pr={5}>
               <Formik
                 initialValues={{
-                  username: userDetails ? userDetails.username : "",
-                  fullName: userDetails ? userDetails.fullname : "",
-                  birthday: userDetails ? userDetails.birthday : "",
+                  username: userProfileDetails
+                    ? userProfileDetails.username
+                    : "",
+                  fullName: userProfileDetails
+                    ? userProfileDetails.fullname
+                    : "",
+                  birthday: userProfileDetails
+                    ? userProfileDetails.birthday
+                    : "",
                   manager:
-                    userDetails && userDetails.Managers
-                      ? userDetails.Managers[0]?.fullname
+                    userProfileDetails && userProfileDetails.Managers
+                      ? userProfileDetails.Managers[0]?.fullname
                       : "",
-                  position: userDetails ? userDetails.position : "",
-                  gender: userDetails ? userDetails.gender : "",
+                  position: userProfileDetails
+                    ? userProfileDetails.position
+                    : "",
+                  gender: userProfileDetails ? userProfileDetails.gender : "",
                 }}
                 enableReinitialize
                 //validationSchema={FormSchema}
@@ -421,13 +436,15 @@ function Settings() {
                           form: { touched, errors, setFieldValue },
                         }) => (
                           <div>
-                            <CustomDatePicker
-                              {...field}
-                              initialDate={field.value || new Date()}
-                              onChange={(val) => {
-                                setFieldValue(field.name, val);
-                              }}
-                            />
+                            {userProfileDetails && (
+                              <CustomDatePicker
+                                {...field}
+                                initialDate={userProfileDetails?.birthday}
+                                onChange={(val) => {
+                                  setFieldValue(field.name, val);
+                                }}
+                              />
+                            )}
                             {touched[field.name] && errors[field.name] && (
                               <Text color="tomato" fontSize="xs">
                                 {errors[field.name]}

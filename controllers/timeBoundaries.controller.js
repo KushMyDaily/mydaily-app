@@ -107,9 +107,9 @@ exports.storetimeBoundariesStats = async () => {
                     )
 
                     const timeBoundariesStat = await TimeBoundaries.create({
-                        outsideWorkHours: result[0],
-                        conflictMeetings: result[1],
-                        emailSentOutside: result[2],
+                        outsideWorkHours: result[0] || 0,
+                        conflictMeetings: result[1] || 0,
+                        emailSentOutside: result[2] || 0,
                         timeBoundariesScore: timeBoundariesScore,
                         userId: user.userId,
                     })

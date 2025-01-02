@@ -168,10 +168,10 @@ exports.storeDailyWorkloadStats = async () => {
 
                         const dailyWorkloadStat = await Workload.create({
                             hoursOfMeetings: result[0],
-                            sentMail: result[1],
-                            inboxMail: result[2],
-                            unreadMail: result[3],
-                            importantMail: result[4],
+                            sentMail: result[1] || 0,
+                            inboxMail: result[2] || 0,
+                            unreadMail: result[3] || 0,
+                            importantMail: result[4] || 0,
                             workloadScore: dailyWorkloadScore,
                             userId: user.userId,
                         })

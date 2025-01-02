@@ -107,9 +107,9 @@ exports.storeReleationshipsStats = async () => {
                     )
 
                     const relationshipStat = await Relationship.create({
-                        meetingAttendees: result[0],
-                        oneToOneManager: result[1],
-                        emailRecipients: result[2],
+                        meetingAttendees: result[0] || 0,
+                        oneToOneManager: result[1] || 0,
+                        emailRecipients: result[2] || 0,
                         relationshipScore: relationshipScore,
                         userId: user.userId,
                     })
