@@ -86,8 +86,8 @@ exports.storeCommunicationStats = async () => {
                     )
 
                     const communicationStat = await Communications.create({
-                        sharedCalendarEvent: result[0],
-                        sendMailFrequency: result[1],
+                        sharedCalendarEvent: result[0] || 0,
+                        sendMailFrequency: result[1] || 0,
                         communicationScore: communicationScore,
                         userId: user.userId,
                     })

@@ -88,14 +88,17 @@ exports.storeAutonomyStats = async () => {
                         '==============================================='
                     )
 
-                    const autonomyStat = await Autonomy.create({
-                        eventCreatedByUser: result[0],
-                        initiatedEmailThreads: result[1],
-                        autonomyScore: autonomyScore,
-                        userId: user.userId,
-                    })
-
-                    return autonomyStat
+                    try {
+                        const autonomyStat = await Autonomy.create({
+                            eventCreatedByUser: result[0] || 0,
+                            initiatedEmailThreads: result[1] || 0,
+                            autonomyScore: autonomyScore,
+                            userId: user.userId,
+                        })
+                        return autonomyStat
+                    } catch (error) {
+                        console.log('Autonomy stat issue ', error)
+                    }
                 })
             })
         }
