@@ -941,16 +941,26 @@ function Home() {
               statusText="Decrease since last week"
               color={defineColor(workloadScore)}
               bgColor={defineBGColor(workloadScore)}
+              isHelperText
+              helperTitle={"Workload"}
+              helperText={
+                "Workload reflects the manageability of your assigned tasks. It is calculated based on your responses to survey questions about task volume, time sufficiency, and control over your workload. Additionally, it incorporates data from integrations such as the number of tasks assigned, deadlines, and working hours. This factor helps identify if your workload is balanced and appropriate."
+              }
             />
           </Box>
           <Box className={styles.factorCol}>
             <CircularProgressCard
-              heading="Relationships"
+              heading="Managerial support"
               percentage={relationshipsScore}
               increase={false}
               statusText="Decrease since last week"
               color={defineColor(relationshipsScore)}
               bgColor={defineBGColor(relationshipsScore)}
+              isHelperText
+              helperTitle={"Managerial Support"}
+              helperText={
+                "Managerial Support represents the level of assistance and guidance you receive from your manager. It is calculated from your survey responses about your manager’s accessibility, clarity of expectations, and helpfulness of feedback. This factor evaluates how effectively your manager supports you in your role."
+              }
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -961,6 +971,11 @@ function Home() {
               statusText="Decrease since last week"
               color={defineColor(timeBoundariesScore)}
               bgColor={defineBGColor(timeBoundariesScore)}
+              isHelperText
+              helperTitle={"Time Boundaries"}
+              helperText={
+                "Time Boundaries measure your ability to maintain a separation between work and personal life. It is calculated using your survey responses regarding disconnecting after work, adherence to scheduled hours, and ability to take breaks. Integration data like emails sent outside of work hours and meeting times also contribute. This factor assesses whether you can maintain a healthy work-life balance."
+              }
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -971,6 +986,11 @@ function Home() {
               statusText="Increase since last week"
               color={defineColor(autonomyScore)}
               bgColor={defineBGColor(autonomyScore)}
+              isHelperText
+              helperTitle={"Autonomy"}
+              helperText={
+                "Autonomy measures the degree of freedom and trust you have in your role. It is calculated from your survey responses regarding your freedom to decide how to perform tasks, the trust placed in you to make decisions, and opportunities to choose or prioritize your work. This factor reflects the level of control you have over your work methods and decision-making."
+              }
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -981,6 +1001,11 @@ function Home() {
               statusText="Increase since last week"
               color={defineColor(communicationScore)}
               bgColor={defineBGColor(communicationScore)}
+              isHelperText
+              helperTitle={"Communication"}
+              helperText={
+                "Communication evaluates the effectiveness of information exchange within your team and with your manager. It is calculated based on your survey responses about the clarity of information received, acknowledgment of your ideas and concerns, and satisfaction with team communication. Integration data such as message frequency and response times may also be considered. This factor assesses how well communication facilitates your work."
+              }
             />
           </Box>
         </Flex>
