@@ -121,7 +121,7 @@ module.exports = (slackApp) => {
                             {
                                 text: {
                                     type: 'plain_text',
-                                    text: 'Amazing, in flow - Deep mental clarity, calm and focus',
+                                    text: 'Focused and Energized - High energy and clear thinking',
                                     emoji: true,
                                 },
                                 value: '10',
@@ -129,39 +129,31 @@ module.exports = (slackApp) => {
                             {
                                 text: {
                                     type: 'plain_text',
-                                    text: 'Great, high energy - Thoughts flow, deep work is achievable',
+                                    text: 'Productive and Steady - Positive mood and making steady progress',
                                     emoji: true,
                                 },
-                                value: '8',
+                                value: '7.5',
                             },
                             {
                                 text: {
                                     type: 'plain_text',
-                                    text: 'Good, some stress - Making progress, pushing through challenges',
+                                    text: 'Managing Tasks - Balancing tasks with some challenges',
                                     emoji: true,
                                 },
-                                value: '6',
+                                value: '5',
                             },
                             {
                                 text: {
                                     type: 'plain_text',
-                                    text: 'Alright, difficulty focusing - Maintaining progess',
+                                    text: 'Tired or Distracted - Low energy and difficulty concentrating',
                                     emoji: true,
                                 },
-                                value: '4',
+                                value: '2.5',
                             },
                             {
                                 text: {
                                     type: 'plain_text',
-                                    text: 'Low, unable to focus - Tired, running out of battery',
-                                    emoji: true,
-                                },
-                                value: '2',
-                            },
-                            {
-                                text: {
-                                    type: 'plain_text',
-                                    text: 'Exhausted - In need of a break or a change',
+                                    text: 'Overwhelmed or Fatigued - Feeling stressed and needing rest or support',
                                     emoji: true,
                                 },
                                 value: '0',

@@ -227,6 +227,7 @@ exports.getEmailThreads = async (userId, labelIds, query) => {
         const oauth2Client = await checkAndRefreshToken(userId)
         if (oauth2Client) {
             const maxResults = 500
+
             const response = await googleService.getThreadsList(
                 oauth2Client,
                 maxResults,
@@ -235,19 +236,26 @@ exports.getEmailThreads = async (userId, labelIds, query) => {
             )
             if (response?.data) {
                 // return response?.data
-                const threads = response?.data.threads
+                if (response?.data?.threads) {
+                    const threads = response.data.threads
 
-                // Fetch full thread details to get the latest message's internalDate
-                const fetchThreadDetails = threads.map((thread) => {
-                    return googleService.getThread(oauth2Client, thread.id)
-                })
-                const a = await Promise.all(fetchThreadDetails)
-                    .then((responses) => {
+                    // Fetch full thread details to get the latest message's internalDate
+                    const fetchThreadDetails = threads.map((thread) => {
+                        return googleService.getThread(oauth2Client, thread.id)
+                    })
+
+                    try {
+                        const responses = await Promise.all(fetchThreadDetails)
+
                         // Extract the latest message's `internalDate` and filter out threads with messages sent on Saturday or Sunday
                         const filteredThreads = responses.filter((res) => {
-                            const messages = res.data.messages
+                            const messages = res?.data?.messages
+                            if (!messages || messages.length === 0) return false
+
                             const latestMessage = messages[messages.length - 1] // Get the latest message in the thread
-                            const internalDate = latestMessage.internalDate // Timestamp in milliseconds
+                            const internalDate = latestMessage?.internalDate
+                            if (!internalDate) return false
+
                             const messageDate = new Date(parseInt(internalDate))
                             const dayOfWeek = messageDate.getDay()
 
@@ -255,14 +263,13 @@ exports.getEmailThreads = async (userId, labelIds, query) => {
                             return dayOfWeek !== 0 && dayOfWeek !== 6
                         })
 
-                        return filteredThreads && filteredThreads?.length > 0
-                            ? filteredThreads?.length
-                            : 0
-                    })
-                    .catch((error) =>
+                        return filteredThreads.length
+                    } catch (error) {
                         console.error('Error fetching thread details:', error)
-                    )
-                return a
+                        return 0
+                    }
+                }
+                return 0
             }
         }
     } catch (error) {
