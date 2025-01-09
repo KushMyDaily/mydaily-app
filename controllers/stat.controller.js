@@ -177,7 +177,7 @@ async function getcalenderData(req, res) {
                     new Date(acc[currentDate].createdAt)
             ) {
                 acc[currentDate] = {
-                    yourForm: current.yourForm, // Store yourForm value
+                    wellbeingScore: current.wellbeingScore, // Store wellbeingScore value
                     createdAt: moment(current?.createdAt).format('YYYY-MM-DD'), // Store createdAt value
                 }
             }
@@ -200,7 +200,7 @@ const getYearlyData = async (userId, yearStartDate, yearEndDate) => {
                 [Op.between]: [yearStartDate, yearEndDate], // Use the startDate and endDate you generate
             },
         },
-        attributes: ['yourForm', 'createdAt'],
+        attributes: ['wellbeingScore', 'createdAt'],
         order: [['createdAt', 'DESC']], // Order by createdAt descending
     })
 
