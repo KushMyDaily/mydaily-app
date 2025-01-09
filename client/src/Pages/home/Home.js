@@ -264,7 +264,7 @@ function Home() {
         const dateObject = new Date(year, month - 1, day);
 
         // Get the tooltip based on your custom logic (assuming defineClass function)
-        const tooltip = defineClass(date?.yourForm);
+        const tooltip = defineClass(date?.wellbeingScore);
 
         // Return the object with date and tooltip in the desired format
         return {
