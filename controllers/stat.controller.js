@@ -23,6 +23,8 @@ const dailyAverageWeight = [
     0.01, 0.01,
 ]
 
+const wellbeingdailyAverageWeight = [0.5, 0.25, 0.15, 0.07, 0.03]
+
 const factors = [
     'WORKLOAD',
     'TIMEBOUNDARY',
@@ -122,7 +124,7 @@ async function getWellBeingRelatedData(req, res) {
         ], // Select only the required fields to optimize
     })
 
-    if (dataSet && date) {
+    if (dataSet.length > 0 && date) {
         const yourform = await findResultsByDate(dataSet, date)
         const average = await getAverages(dataSet, date)
 
@@ -384,35 +386,36 @@ async function getYourForm(userId, date) {
         throw new Error('Date is required')
     }
     const givenDate = moment(date, 'YYYY-MM-DD') // Parse the given date using Moment.js
-    const fifteenDaysAgo = givenDate.clone().subtract(15, 'days') // Subtract 15 days from the given date
+    const fiveDaysAgo = givenDate.clone().subtract(5, 'days') // Subtract 5 days from the given date
 
     try {
-        const last15DaysWellbeingStats = await StatisticsByDate.findAll({
+        const last5DaysWellbeingStats = await StatisticsByDate.findAll({
             where: {
                 userId: userId,
                 createdAt: {
                     [Op.between]: [
-                        fifteenDaysAgo.toISOString(),
+                        fiveDaysAgo.toISOString(),
                         givenDate.toISOString(),
                     ],
                 },
             },
             order: [['createdAt', 'DESC']], // Order by most recent first
         })
-        if (last15DaysWellbeingStats.length !== 0) {
-            const last15DaysWellbeingArray =
-                await generateLast15DaysWellbeingScores(
-                    last15DaysWellbeingStats,
+        if (last5DaysWellbeingStats.length !== 0) {
+            const last5DaysWellbeingArray =
+                await generateLast5DaysWellbeingScores(
+                    last5DaysWellbeingStats,
                     date
                 )
-            const hasEmptyDays = last15DaysWellbeingArray.some(
+            const hasEmptyDays = last5DaysWellbeingArray.some(
                 (score) => score === 0
             )
             if (hasEmptyDays) {
-                const emptyValuesTotalScore = last15DaysWellbeingArray.reduce(
+                const emptyValuesTotalScore = last5DaysWellbeingArray.reduce(
                     (totalScore, data, index) => {
                         if (data === 0) {
-                            totalScore += dailyAverageWeight[index] || 0
+                            totalScore +=
+                                wellbeingdailyAverageWeight[index] || 0
                         }
                         return totalScore
                     },
@@ -422,20 +425,20 @@ async function getYourForm(userId, date) {
                     const totalAvailableWeight = (
                         1 - emptyValuesTotalScore
                     ).toFixed(2)
-                    const newWeightScore = dailyAverageWeight.map((average) =>
-                        (average / totalAvailableWeight).toFixed(2)
+                    const newWeightScore = wellbeingdailyAverageWeight.map(
+                        (average) => (average / totalAvailableWeight).toFixed(2)
                     )
 
                     const totalScore = await calculateTotalWellbeingScore(
-                        last15DaysWellbeingArray,
+                        last5DaysWellbeingArray,
                         newWeightScore
                     )
                     return totalScore
                 }
             } else {
                 const totalScore = await calculateTotalWellbeingScore(
-                    last15DaysWellbeingArray,
-                    dailyAverageWeight
+                    last5DaysWellbeingArray,
+                    wellbeingdailyAverageWeight
                 )
                 return totalScore
             }
@@ -447,10 +450,10 @@ async function getYourForm(userId, date) {
     }
 
     async function calculateTotalWellbeingScore(
-        last15DaysWellbeingArray,
+        last5DaysWellbeingArray,
         newWeightScore
     ) {
-        const totalScore = last15DaysWellbeingArray.reduce(
+        const totalScore = last5DaysWellbeingArray.reduce(
             (sum, current, index) => {
                 return sum + current * parseFloat(newWeightScore[index])
             },
@@ -461,14 +464,14 @@ async function getYourForm(userId, date) {
     }
 }
 
-async function generateLast15DaysWellbeingScores(data, referenceDate) {
+async function generateLast5DaysWellbeingScores(data, referenceDate) {
     const result = []
 
     // Parse the reference date using moment.js
     const refDate = moment(getPreviousWeekday(referenceDate), 'YYYY-MM-DD')
 
     // Create an array of dates for the last 15 days
-    const last15Days = Array.from({ length: 15 }, (_, i) =>
+    const last5Days = Array.from({ length: 5 }, (_, i) =>
         refDate.clone().subtract(i, 'days').format('YYYY-MM-DD')
     )
 
@@ -489,7 +492,7 @@ async function generateLast15DaysWellbeingScores(data, referenceDate) {
     })
 
     // Populate the result array with wellbeingScore or null
-    last15Days.forEach((day) => {
+    last5Days.forEach((day) => {
         if (latestWellbeingByDate[day] !== undefined) {
             result.push(latestWellbeingByDate[day])
         } else {
