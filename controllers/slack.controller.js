@@ -19,11 +19,61 @@ exports.runSurvey = async () => {
         const slackOauth = await SlackOAuthController.findAll()
 
         if (slackOauth) {
-            for (const oauth of slackOauth) {
-                try {
-                    let token
-                    const authResult = await slackService.authorize(
-                        oauth.teamId
+            slackOauth.forEach(async (oauth) => {
+                let token
+                await slackService
+                    .authorize(oauth.teamId)
+                    .then((res) => {
+                        if (oauth.tokenType === 'bot') {
+                            token = res.botToken
+                        } else if (oauth.tokenType === 'user') {
+                            token = res.userToken
+                        }
+                    })
+                    .catch((err) => {
+                        throw new Error('Failed authorize token', err)
+                    })
+
+                if (oauth) {
+                    const filtedWorkspaceUsers = await Promise.all(
+                        oauth.workspace_users.map(async (workspaceUser) => {
+                            const rows = await User.findAll({
+                                where: {
+                                    [Op.or]: [
+                                        { workspaceUserIds: workspaceUser.id }, // Check for equality with number
+                                        {
+                                            // Check if the column is not null and not empty
+                                            [Op.and]: [
+                                                {
+                                                    workspaceUserIds: {
+                                                        [Op.ne]: null,
+                                                    },
+                                                }, // Ensure it's not null
+                                                {
+                                                    workspaceUserIds: {
+                                                        [Op.ne]: '',
+                                                    },
+                                                }, // Ensure it's not empty
+                                                Sequelize.where(
+                                                    Sequelize.fn(
+                                                        'JSON_CONTAINS',
+                                                        Sequelize.col(
+                                                            'workspaceUserIds'
+                                                        ),
+                                                        JSON.stringify([
+                                                            workspaceUser.id,
+                                                        ])
+                                                    ),
+                                                    true
+                                                ),
+                                            ],
+                                        },
+                                    ],
+                                },
+                            })
+                            // Return the workspaceUser if rows.length > 0, otherwise return null
+                            return rows.length > 0 ? workspaceUser : null
+                        })
                     )
 
                     for (const user of filtedWorkspaceUsers.filter(
@@ -165,10 +215,10 @@ exports.runSurvey = async () => {
                         }
                     }
                 }
-            }
+            })
         }
     } catch (err) {
-        console.error('General error:', err)
+        console.log(err)
     }
 }
 
