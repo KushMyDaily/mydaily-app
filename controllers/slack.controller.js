@@ -19,71 +19,71 @@ exports.runSurvey = async () => {
         const slackOauth = await SlackOAuthController.findAll()
 
         if (slackOauth) {
-            slackOauth.forEach(async (oauth) => {
-                let token
-                await slackService
-                    .authorize(oauth.teamId)
-                    .then((res) => {
-                        if (oauth.tokenType === 'bot') {
-                            token = res.botToken
-                        } else if (oauth.tokenType === 'user') {
-                            token = res.userToken
-                        }
-                    })
-                    .catch((err) => {
-                        throw new Error('Failed authorize token', err)
-                    })
-
-                if (oauth) {
-                    const filtedWorkspaceUsers = await Promise.all(
-                        oauth.workspace_users.map(async (workspaceUser) => {
-                            const rows = await User.findAll({
-                                where: {
-                                    [Op.or]: [
-                                        { workspaceUserIds: workspaceUser.id }, // Check for equality with number
-                                        {
-                                            // Check if the column is not null and not empty
-                                            [Op.and]: [
-                                                {
-                                                    workspaceUserIds: {
-                                                        [Op.ne]: null,
-                                                    },
-                                                }, // Ensure it's not null
-                                                {
-                                                    workspaceUserIds: {
-                                                        [Op.ne]: '',
-                                                    },
-                                                }, // Ensure it's not empty
-                                                Sequelize.where(
-                                                    Sequelize.fn(
-                                                        'JSON_CONTAINS',
-                                                        Sequelize.col(
-                                                            'workspaceUserIds'
-                                                        ),
-                                                        JSON.stringify([
-                                                            workspaceUser.id,
-                                                        ])
-                                                    ),
-                                                    true
-                                                ),
-                                            ],
-                                        },
-                                    ],
-                                },
-                            })
-                            // Return the workspaceUser if rows.length > 0, otherwise return null
-                            return rows.length > 0 ? workspaceUser : null
-                        })
+            for (const oauth of slackOauth) {
+                try {
+                    let token
+                    const authResult = await slackService.authorize(
+                        oauth.teamId
                     )
 
-                    filtedWorkspaceUsers
-                        .filter((user) => user !== null)
-                        .forEach(async (user) => {
+                    // Assign the appropriate token type
+                    if (oauth.tokenType === 'bot') {
+                        token = authResult.botToken
+                    } else if (oauth.tokenType === 'user') {
+                        token = authResult.userToken
+                    }
+
+                    if (oauth) {
+                        const filteredWorkspaceUsers = await Promise.all(
+                            oauth.workspace_users.map(async (workspaceUser) => {
+                                const rows = await User.findAll({
+                                    where: {
+                                        [Op.or]: [
+                                            {
+                                                workspaceUserIds:
+                                                    workspaceUser.id,
+                                            },
+                                            {
+                                                [Op.and]: [
+                                                    {
+                                                        workspaceUserIds: {
+                                                            [Op.ne]: null,
+                                                        },
+                                                    },
+                                                    {
+                                                        workspaceUserIds: {
+                                                            [Op.ne]: '',
+                                                        },
+                                                    },
+                                                    Sequelize.where(
+                                                        Sequelize.fn(
+                                                            'JSON_CONTAINS',
+                                                            Sequelize.col(
+                                                                'workspaceUserIds'
+                                                            ),
+                                                            JSON.stringify([
+                                                                workspaceUser.id,
+                                                            ])
+                                                        ),
+                                                        true
+                                                    ),
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                })
+                                return rows.length > 0 ? workspaceUser : null
+                            })
+                        )
+
+                        for (const user of filteredWorkspaceUsers.filter(
+                            (u) => u !== null
+                        )) {
                             try {
-                                const postedResponse =
-                                    await webClient.chat.postMessage({
+                                const apiCall = async () =>
+                                    webClient.chat.postMessage({
                                         token: token,
-                                        channel: await user.userId,
+                                        channel: user.userId,
                                         text: 'survey',
                                         blocks: [
                                             {
@@ -94,9 +94,7 @@ exports.runSurvey = async () => {
                                                     emoji: true,
                                                 },
                                             },
-                                            {
-                                                type: 'divider',
-                                            },
+                                            { type: 'divider' },
                                             {
                                                 type: 'section',
                                                 text: {
@@ -123,36 +121,38 @@ exports.runSurvey = async () => {
                                         ],
                                     })
 
+                                const postedResponse =
+                                    await slackService.safeApiCall(
+                                        apiCall,
+                                        oauth.tokenType,
+                                        authResult,
+                                        oauth.teamId
+                                    )
+
                                 if (postedResponse) {
-                                    console.log(postedResponse)
-                                    try {
-                                        const postedTimestamp =
-                                            await WorkspaceUser.update(
-                                                {
-                                                    postedTimestamp:
-                                                        postedResponse?.ts,
-                                                    channelId:
-                                                        postedResponse?.channel,
-                                                },
-                                                {
-                                                    where: {
-                                                        userId: user.userId,
-                                                    },
-                                                }
-                                            )
-                                    } catch (error) {
-                                        console.log(error)
-                                    }
+                                    await WorkspaceUser.update(
+                                        {
+                                            postedTimestamp: postedResponse?.ts,
+                                            channelId: postedResponse?.channel,
+                                        },
+                                        {
+                                            where: { userId: user.userId },
+                                        }
+                                    )
                                 }
                             } catch (error) {
-                                console.log('postMesage issue', error)
+                                console.error('Error posting message:', error)
+                                console.error('User ID:', user.userId)
                             }
-                        })
+                        }
+                    }
+                } catch (authError) {
+                    console.error('Authorization error:', authError)
                 }
-            })
+            }
         }
     } catch (err) {
-        console.log(err)
+        console.error('General error:', err)
     }
 }
 
