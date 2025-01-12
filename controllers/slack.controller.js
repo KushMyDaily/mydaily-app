@@ -16,143 +16,141 @@ const webClient = new WebClient()
 
 exports.runSurvey = async () => {
     try {
-        const slackOauth = await SlackOAuthController.findAll()
+        const slackOauths = await SlackOAuthAccess.findAll()
 
-        if (slackOauth) {
-            for (const oauth of slackOauth) {
-                try {
-                    let token
-                    const authResult = await slackService.authorize(
-                        oauth.teamId
-                    )
+        if (!slackOauths || slackOauths.length === 0) {
+            console.log('No OAuth records found.')
+            return
+        }
 
-                    // Assign the appropriate token type
-                    if (oauth.tokenType === 'bot') {
-                        token = authResult.botToken
-                    } else if (oauth.tokenType === 'user') {
-                        token = authResult.userToken
-                    }
+        for (const oauth of slackOauths) {
+            try {
+                const authResult = await slackService.authorize(oauth.teamId)
+                const token =
+                    oauth.tokenType === 'bot'
+                        ? authResult.botToken
+                        : authResult.userToken
 
-                    if (oauth) {
-                        const filteredWorkspaceUsers = await Promise.all(
-                            oauth.workspace_users.map(async (workspaceUser) => {
-                                const rows = await User.findAll({
-                                    where: {
-                                        [Op.or]: [
+                const filteredWorkspaceUsers = await Promise.all(
+                    oauth.workspace_users.map(async (workspaceUser) => {
+                        const rows = await User.findAll({
+                            where: {
+                                [Op.or]: [
+                                    { workspaceUserIds: workspaceUser.id },
+                                    {
+                                        [Op.and]: [
                                             {
-                                                workspaceUserIds:
-                                                    workspaceUser.id,
+                                                workspaceUserIds: {
+                                                    [Op.ne]: null,
+                                                },
                                             },
                                             {
-                                                [Op.and]: [
-                                                    {
-                                                        workspaceUserIds: {
-                                                            [Op.ne]: null,
-                                                        },
-                                                    },
-                                                    {
-                                                        workspaceUserIds: {
-                                                            [Op.ne]: '',
-                                                        },
-                                                    },
-                                                    Sequelize.where(
-                                                        Sequelize.fn(
-                                                            'JSON_CONTAINS',
-                                                            Sequelize.col(
-                                                                'workspaceUserIds'
-                                                            ),
-                                                            JSON.stringify([
-                                                                workspaceUser.id,
-                                                            ])
-                                                        ),
-                                                        true
+                                                workspaceUserIds: {
+                                                    [Op.ne]: '',
+                                                },
+                                            },
+                                            Sequelize.where(
+                                                Sequelize.fn(
+                                                    'JSON_CONTAINS',
+                                                    Sequelize.col(
+                                                        'workspaceUserIds'
                                                     ),
-                                                ],
+                                                    JSON.stringify([
+                                                        workspaceUser.id,
+                                                    ])
+                                                ),
+                                                true
+                                            ),
+                                        ],
+                                    },
+                                ],
+                            },
+                        })
+
+                        return rows.length > 0 ? workspaceUser : null
+                    })
+                )
+
+                const validWorkspaceUsers = filteredWorkspaceUsers.filter(
+                    (user) => user !== null
+                )
+
+                for (const user of validWorkspaceUsers) {
+                    try {
+                        const webClient = new WebClient(token)
+
+                        const postedResponse = await webClient.chat.postMessage(
+                            {
+                                channel: user.userId,
+                                text: 'survey',
+                                blocks: [
+                                    {
+                                        type: 'header',
+                                        text: {
+                                            type: 'plain_text',
+                                            text: 'Hey :wave: !',
+                                            emoji: true,
+                                        },
+                                    },
+                                    {
+                                        type: 'divider',
+                                    },
+                                    {
+                                        type: 'section',
+                                        text: {
+                                            type: 'plain_text',
+                                            text: 'Please take a moment to fill out today survey.',
+                                            emoji: true,
+                                        },
+                                    },
+                                    {
+                                        type: 'actions',
+                                        elements: [
+                                            {
+                                                type: 'button',
+                                                text: {
+                                                    type: 'plain_text',
+                                                    text: 'Open survey',
+                                                    emoji: true,
+                                                },
+                                                value: 'click_me_123',
+                                                action_id: 'actionId-0',
                                             },
                                         ],
                                     },
-                                })
-                                return rows.length > 0 ? workspaceUser : null
-                            })
+                                ],
+                            }
                         )
 
-                        for (const user of filteredWorkspaceUsers.filter(
-                            (u) => u !== null
-                        )) {
-                            try {
-                                const apiCall = async () =>
-                                    webClient.chat.postMessage({
-                                        token: token,
-                                        channel: user.userId,
-                                        text: 'survey',
-                                        blocks: [
-                                            {
-                                                type: 'header',
-                                                text: {
-                                                    type: 'plain_text',
-                                                    text: 'Hey :wave: !',
-                                                    emoji: true,
-                                                },
-                                            },
-                                            { type: 'divider' },
-                                            {
-                                                type: 'section',
-                                                text: {
-                                                    type: 'plain_text',
-                                                    text: 'Please take a time to fill today survey.',
-                                                    emoji: true,
-                                                },
-                                            },
-                                            {
-                                                type: 'actions',
-                                                elements: [
-                                                    {
-                                                        type: 'button',
-                                                        text: {
-                                                            type: 'plain_text',
-                                                            text: 'Open survey',
-                                                            emoji: true,
-                                                        },
-                                                        value: 'click_me_123',
-                                                        action_id: 'actionId-0',
-                                                    },
-                                                ],
-                                            },
-                                        ],
-                                    })
-
-                                const postedResponse =
-                                    await slackService.safeApiCall(
-                                        apiCall,
-                                        oauth.tokenType,
-                                        authResult,
-                                        oauth.teamId
-                                    )
-
-                                if (postedResponse) {
-                                    await WorkspaceUser.update(
-                                        {
-                                            postedTimestamp: postedResponse?.ts,
-                                            channelId: postedResponse?.channel,
-                                        },
-                                        {
-                                            where: { userId: user.userId },
-                                        }
-                                    )
+                        if (postedResponse) {
+                            await WorkspaceUser.update(
+                                {
+                                    postedTimestamp: postedResponse.ts,
+                                    channelId: postedResponse.channel,
+                                },
+                                {
+                                    where: { userId: user.userId },
                                 }
-                            } catch (error) {
-                                console.error('Error posting message:', error)
-                                console.error('User ID:', user.userId)
-                            }
+                            )
                         }
+                    } catch (error) {
+                        console.error(
+                            'Error posting message to user:',
+                            user.userId,
+                            error
+                        )
                     }
-                } catch (authError) {
-                    console.error('Authorization error:', authError)
                 }
+            } catch (authError) {
+                console.error(
+                    'Authorization error for teamId:',
+                    oauth.teamId,
+                    authError
+                )
             }
         }
     } catch (err) {
-        console.error('General error:', err)
+        console.error('runSurvey error:', err)
     }
 }
 
