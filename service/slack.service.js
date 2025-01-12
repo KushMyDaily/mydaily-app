@@ -52,29 +52,67 @@ class SlackService {
         }
     }
 
-    async safeApiCall(apiCall, tokenType, authResult, teamId) {
+    async safeApiCall(apiCallFn, tokenType, authResult, teamId) {
         try {
-            return await apiCall()
+            return await apiCallFn()
         } catch (error) {
             if (error.data?.error === 'token_expired') {
-                console.warn('Token expired, attempting to refresh...')
-                const tokensToRefresh = [
-                    tokenType === 'bot'
-                        ? authResult.botRefreshToken
-                        : authResult.userRefreshToken,
-                ]
-                const currentUTCSec = Math.floor(Date.now() / 1000)
+                console.log('Token expired, attempting to refresh...')
+                const tokensToRefresh =
+                    tokenType === 'bot' && authResult.botRefreshToken
+                        ? [authResult.botRefreshToken]
+                        : tokenType === 'user' && authResult.userRefreshToken
+                          ? [authResult.userRefreshToken]
+                          : []
 
-                await this.refreshAndStoreTokens(
-                    authResult,
-                    tokensToRefresh,
-                    currentUTCSec,
-                    teamId
+                if (tokensToRefresh.length > 0) {
+                    const refreshResponses =
+                        await this.refreshExpiringTokens(tokensToRefresh)
+                    const refreshResp = refreshResponses[0] // Only one token to refresh here
+
+                    if (refreshResp.token_type === tokenType) {
+                        // Update the token in memory
+                        const newToken = refreshResp.access_token
+                        const newRefreshToken = refreshResp.refresh_token
+                        const newExpiresAt =
+                            Math.floor(Date.now() / 1000) +
+                            refreshResp.expires_in
+
+                        // Persist new tokens to DB
+                        await SlackOAuthAccess.update(
+                            {
+                                [`${tokenType}Token`]: newToken,
+                                [`${tokenType}RefreshToken`]: newRefreshToken,
+                                [`${tokenType}ExpiresAt`]: newExpiresAt,
+                            },
+                            { where: { teamId } }
+                        )
+
+                        // Retry the API call with the new token
+                        return await apiCallFn()
+                    }
+                }
+            } else if (error.data?.error === 'invalid_refresh_token') {
+                console.log(
+                    'Invalid refresh token. App reauthorization required.'
+                )
+                // Update database to mark the token as invalid
+                await SlackOAuthAccess.update(
+                    {
+                        [`${tokenType}RefreshToken`]: null,
+                        [`${tokenType}Token`]: null,
+                    },
+                    { where: { teamId } }
                 )
 
-                // Retry the API call after refreshing the token
-                return await apiCall()
+                // Notify the admin or log for monitoring
+                console.log(`Team ${teamId} needs to reauthorize the app.`)
+                throw new Error(
+                    'App needs reauthorization due to invalid refresh token.'
+                )
             }
+
+            // Rethrow if error is not related to token issues
             throw error
         }
     }
