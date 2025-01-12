@@ -73,22 +73,22 @@ const OPTIONS = {
   },
   colors: [
     function ({ value }) {
-      if (value >= 9.5 && value <= 10) {
+      if (value >= 9 && value <= 10) {
         return Color.Amazing;
       }
-      if (value >= 7.5 && value <= 9.5) {
+      if (value >= 7.5 && value < 9) {
         return Color.Great;
       }
-      if (value >= 5.5 && value <= 7.5) {
+      if (value >= 6 && value < 7.5) {
         return Color.Good;
       }
-      if (value >= 3.5 && value <= 5.5) {
+      if (value >= 4 && value < 6) {
         return Color.Alright;
       }
-      if (value >= 1.5 && value <= 3.5) {
+      if (value >= 2 && value < 4) {
         return Color.Low;
       }
-      if (value >= 0 && value <= 1.5) {
+      if (value >= 0 && value < 2) {
         return Color.Exhausted;
       } else {
         return "#000000";
