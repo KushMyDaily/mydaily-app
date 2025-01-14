@@ -198,7 +198,7 @@ exports.runSurvey = async () => {
 
                                     // Mark the team as needing reauthorization
                                     await SlackOAuthAccess.update(
-                                        { needsReauthorization: 1 },
+                                        { needsReauthorization: true },
                                         { where: { teamId: oauth.teamId } }
                                     )
 

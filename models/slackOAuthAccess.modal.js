@@ -47,6 +47,9 @@ module.exports = (sequelize, DataTypes) => {
         botExpiresAt: {
             type: DataTypes.INTEGER,
         },
+        needsReauthorization: {
+            type: DataTypes.BOOLEAN,
+        },
     })
 
     // SlackOAuthAccess.associate = function (models) {
