@@ -16,141 +16,285 @@ const webClient = new WebClient()
 
 exports.runSurvey = async () => {
     try {
-        const slackOauths = await SlackOAuthAccess.findAll()
+        const slackOauth = await SlackOAuthController.findAll()
 
-        if (!slackOauths || slackOauths.length === 0) {
-            console.log('No OAuth records found.')
-            return
-        }
-
-        for (const oauth of slackOauths) {
-            try {
-                const authResult = await slackService.authorize(oauth.teamId)
-                const token =
-                    oauth.tokenType === 'bot'
-                        ? authResult.botToken
-                        : authResult.userToken
-
-                const filteredWorkspaceUsers = await Promise.all(
-                    oauth.workspace_users.map(async (workspaceUser) => {
-                        const rows = await User.findAll({
-                            where: {
-                                [Op.or]: [
-                                    { workspaceUserIds: workspaceUser.id },
-                                    {
-                                        [Op.and]: [
-                                            {
-                                                workspaceUserIds: {
-                                                    [Op.ne]: null,
-                                                },
-                                            },
-                                            {
-                                                workspaceUserIds: {
-                                                    [Op.ne]: '',
-                                                },
-                                            },
-                                            Sequelize.where(
-                                                Sequelize.fn(
-                                                    'JSON_CONTAINS',
-                                                    Sequelize.col(
-                                                        'workspaceUserIds'
-                                                    ),
-                                                    JSON.stringify([
-                                                        workspaceUser.id,
-                                                    ])
-                                                ),
-                                                true
-                                            ),
-                                        ],
-                                    },
-                                ],
-                            },
-                        })
-
-                        return rows.length > 0 ? workspaceUser : null
+        if (slackOauth) {
+            slackOauth.forEach(async (oauth) => {
+                let token
+                await slackService
+                    .authorize(oauth.teamId)
+                    .then((res) => {
+                        if (oauth.tokenType === 'bot') {
+                            token = res.botToken
+                        } else if (oauth.tokenType === 'user') {
+                            token = res.userToken
+                        }
                     })
-                )
+                    .catch((err) => {
+                        throw new Error('Failed authorize token', err)
+                    })
 
-                const validWorkspaceUsers = filteredWorkspaceUsers.filter(
-                    (user) => user !== null
-                )
-
-                for (const user of validWorkspaceUsers) {
-                    try {
-                        const webClient = new WebClient(token)
-
-                        const postedResponse = await webClient.chat.postMessage(
-                            {
-                                channel: user.userId,
-                                text: 'survey',
-                                blocks: [
-                                    {
-                                        type: 'header',
-                                        text: {
-                                            type: 'plain_text',
-                                            text: 'Hey :wave: !',
-                                            emoji: true,
+                if (oauth) {
+                    const filtedWorkspaceUsers = await Promise.all(
+                        oauth.workspace_users.map(async (workspaceUser) => {
+                            const rows = await User.findAll({
+                                where: {
+                                    [Op.or]: [
+                                        { workspaceUserIds: workspaceUser.id }, // Check for equality with number
+                                        {
+                                            // Check if the column is not null and not empty
+                                            [Op.and]: [
+                                                {
+                                                    workspaceUserIds: {
+                                                        [Op.ne]: null,
+                                                    },
+                                                }, // Ensure it's not null
+                                                {
+                                                    workspaceUserIds: {
+                                                        [Op.ne]: '',
+                                                    },
+                                                }, // Ensure it's not empty
+                                                Sequelize.where(
+                                                    Sequelize.fn(
+                                                        'JSON_CONTAINS',
+                                                        Sequelize.col(
+                                                            'workspaceUserIds'
+                                                        ),
+                                                        JSON.stringify([
+                                                            workspaceUser.id,
+                                                        ])
+                                                    ),
+                                                    true
+                                                ),
+                                            ],
                                         },
-                                    },
-                                    {
-                                        type: 'divider',
-                                    },
-                                    {
-                                        type: 'section',
-                                        text: {
-                                            type: 'plain_text',
-                                            text: 'Please take a moment to fill out today survey.',
-                                            emoji: true,
-                                        },
-                                    },
-                                    {
-                                        type: 'actions',
-                                        elements: [
-                                            {
-                                                type: 'button',
-                                                text: {
-                                                    type: 'plain_text',
-                                                    text: 'Open survey',
-                                                    emoji: true,
-                                                },
-                                                value: 'click_me_123',
-                                                action_id: 'actionId-0',
-                                            },
-                                        ],
-                                    },
-                                ],
-                            }
-                        )
-
-                        if (postedResponse) {
-                            await WorkspaceUser.update(
-                                {
-                                    postedTimestamp: postedResponse.ts,
-                                    channelId: postedResponse.channel,
+                                    ],
                                 },
-                                {
-                                    where: { userId: user.userId },
+                            })
+                            // Return the workspaceUser if rows.length > 0, otherwise return null
+                            return rows.length > 0 ? workspaceUser : null
+                        })
+                    )
+
+                    // filtedWorkspaceUsers
+                    //     .filter((user) => user !== null)
+                    //     .forEach(async (user) => {
+                    //         try {
+                    //             const postedResponse =
+                    //                 await webClient.chat.postMessage({
+                    //                     token: token,
+                    //                     channel: await user.userId,
+                    //                     text: 'survey',
+                    //                     blocks: [
+                    //                         {
+                    //                             type: 'header',
+                    //                             text: {
+                    //                                 type: 'plain_text',
+                    //                                 text: 'Hey :wave: !',
+                    //                                 emoji: true,
+                    //                             },
+                    //                         },
+                    //                         {
+                    //                             type: 'divider',
+                    //                         },
+                    //                         {
+                    //                             type: 'section',
+                    //                             text: {
+                    //                                 type: 'plain_text',
+                    //                                 text: 'Please take a time to fill today survey.',
+                    //                                 emoji: true,
+                    //                             },
+                    //                         },
+                    //                         {
+                    //                             type: 'actions',
+                    //                             elements: [
+                    //                                 {
+                    //                                     type: 'button',
+                    //                                     text: {
+                    //                                         type: 'plain_text',
+                    //                                         text: 'Open survey',
+                    //                                         emoji: true,
+                    //                                     },
+                    //                                     value: 'click_me_123',
+                    //                                     action_id: 'actionId-0',
+                    //                                 },
+                    //                             ],
+                    //                         },
+                    //                     ],
+                    //                 })
+
+                    //             if (postedResponse) {
+                    //                 console.log(postedResponse)
+                    //                 try {
+                    //                     const postedTimestamp =
+                    //                         await WorkspaceUser.update(
+                    //                             {
+                    //                                 postedTimestamp:
+                    //                                     postedResponse?.ts,
+                    //                                 channelId:
+                    //                                     postedResponse?.channel,
+                    //                             },
+                    //                             {
+                    //                                 where: {
+                    //                                     userId: user.userId,
+                    //                                 },
+                    //                             }
+                    //                         )
+                    //                 } catch (error) {
+                    //                     console.log(error)
+                    //                 }
+                    //             }
+                    //         } catch (error) {
+                    //             console.log('postMesage issue', error)
+                    //             console.log(
+                    //                 'post message issue userID',
+                    //                 user.userId
+                    //             )
+                    //         }
+                    //     })
+                    for (const user of filtedWorkspaceUsers.filter(
+                        (user) => user !== null
+                    )) {
+                        try {
+                            const postMessage = async (token) => {
+                                return await webClient.chat.postMessage({
+                                    token: token,
+                                    channel: user.userId,
+                                    text: 'survey',
+                                    blocks: [
+                                        {
+                                            type: 'header',
+                                            text: {
+                                                type: 'plain_text',
+                                                text: 'Hey :wave: !',
+                                                emoji: true,
+                                            },
+                                        },
+                                        {
+                                            type: 'divider',
+                                        },
+                                        {
+                                            type: 'section',
+                                            text: {
+                                                type: 'plain_text',
+                                                text: "Please take a time to fill today's survey.",
+                                                emoji: true,
+                                            },
+                                        },
+                                        {
+                                            type: 'actions',
+                                            elements: [
+                                                {
+                                                    type: 'button',
+                                                    text: {
+                                                        type: 'plain_text',
+                                                        text: 'Open survey',
+                                                        emoji: true,
+                                                    },
+                                                    value: 'click_me_123',
+                                                    action_id: 'actionId-0',
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                })
+                            }
+
+                            // Attempt to post the message
+                            let postedResponse
+                            try {
+                                postedResponse = await postMessage(token)
+                            } catch (error) {
+                                // Check for token expiration
+                                if (
+                                    error.data &&
+                                    error.data.error === 'token_expired'
+                                ) {
+                                    console.log(
+                                        'Token expired, refreshing token...'
+                                    )
+
+                                    // Refresh the token
+                                    const authResult =
+                                        await slackService.authorize(
+                                            oauth.teamId
+                                        )
+                                    const refreshedToken =
+                                        oauth.tokenType === 'bot'
+                                            ? authResult.botToken
+                                            : authResult.userToken
+
+                                    // Retry posting the message with the refreshed token
+                                    postedResponse =
+                                        await postMessage(refreshedToken)
+
+                                    // Update the token in the database if necessary
+                                    await SlackOAuthAccess.update(
+                                        {
+                                            [oauth.tokenType === 'bot'
+                                                ? 'botToken'
+                                                : 'userToken']: refreshedToken,
+                                        },
+                                        {
+                                            where: { teamId: oauth.teamId },
+                                        }
+                                    )
+                                } else if (
+                                    error.data &&
+                                    error.data?.error ===
+                                        'invalid_refresh_token'
+                                ) {
+                                    console.log(
+                                        'Invalid refresh token. App reauthorization required.'
+                                    )
+                                    // Update database to mark the token as invalid
+                                    await SlackOAuthAccess.update(
+                                        {
+                                            [`${oauth.tokenType}RefreshToken`]:
+                                                null,
+                                            [`${oauth.tokenType}Token`]: null,
+                                        },
+                                        { where: { teamId: oauth.teamId } }
+                                    )
+
+                                    // Notify the admin or log for monitoring
+                                    console.log(
+                                        `Team ${oauth.teamId} needs to reauthorize the app.`
+                                    )
+                                    throw new Error(
+                                        'App needs reauthorization due to invalid refresh token.'
+                                    )
+                                } else {
+                                    throw error // Rethrow if it's not a token expiration issue
                                 }
+                            }
+
+                            // Process the posted response if successful
+                            if (postedResponse) {
+                                console.log(postedResponse)
+                                await WorkspaceUser.update(
+                                    {
+                                        postedTimestamp: postedResponse?.ts,
+                                        channelId: postedResponse?.channel,
+                                    },
+                                    {
+                                        where: { userId: user.userId },
+                                    }
+                                )
+                            }
+                        } catch (error) {
+                            console.error('Post message issue:', error)
+                            console.error(
+                                'Post message issue userID:',
+                                user.userId
                             )
                         }
-                    } catch (error) {
-                        console.error(
-                            'Error posting message to user:',
-                            user.userId,
-                            error
-                        )
                     }
                 }
-            } catch (authError) {
-                console.error(
-                    'Authorization error for teamId:',
-                    oauth.teamId,
-                    authError
-                )
-            }
+            })
         }
     } catch (err) {
-        console.error('runSurvey error:', err)
+        console.log(err)
     }
 }
 
