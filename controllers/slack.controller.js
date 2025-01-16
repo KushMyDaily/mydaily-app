@@ -254,6 +254,7 @@ exports.InitializeSlackOauth = async (installation) => {
         botId: installation?.bot?.id,
         botRefreshToken: installation?.bot?.refreshToken,
         botExpiresAt: installation?.bot?.expiresAt,
+        needsReauthorization: false,
     }
 
     //ifExistToken
@@ -291,6 +292,74 @@ exports.InitializeSlackOauth = async (installation) => {
 
                     const workspaceUser =
                         await WorkspaceUser.bulkCreate(bulkWorkspaceUser)
+
+                    if (workspaceUser) {
+                        await WorkspaceUserController.findAll()
+                            .then(async (res) => {
+                                await res.forEach(async (user) => {
+                                    SlackOAuthController.addWorkspaceUser(
+                                        result.id,
+                                        user.id
+                                    )
+                                })
+                            })
+                            .catch((err) => {
+                                console.log(
+                                    '>> Error while creating oAuthWorspaceUser: ',
+                                    err
+                                )
+                            })
+                    }
+                }
+            })
+            .catch((err) => {
+                console.log('>> Error while creating oAuth: ', err)
+            })
+    } else if (token.length > 0) {
+        const slackOAuth = await SlackOAuthAccess.update(oAuth, {
+            where: { teamId: installation?.team.id },
+        })
+            .then(async (result) => {
+                const userList = await slackService.listUsers(
+                    result.botToken,
+                    result.teamId
+                )
+
+                if (userList?.members.length > 0) {
+                    const filteredUsers = userList?.members.filter(
+                        (user) =>
+                            user.is_email_confirmed === true &&
+                            user.deleted === false
+                    )
+                    const bulkWorkspaceUser = []
+                    filteredUsers.forEach(async (user) => {
+                        bulkWorkspaceUser.push({
+                            userId: user.id,
+                            teamId: user.team_id,
+                            name: user.name,
+                            email: user.profile?.email,
+                            isAdmin: user.is_admin,
+                            isOwner: user.is_owner,
+                            postedTimestamp: '',
+                            channelId: '',
+                        })
+                    })
+
+                    const existingWorkspaceUsers = await WorkspaceUser.findAll({
+                        where: { teamId: result.teamId },
+                    })
+
+                    const existingWorkspaceUserIds = existingWorkspaceUsers.map(
+                        (user) => user.userId
+                    )
+
+                    const newWorkspaceUsers = bulkWorkspaceUser.filter(
+                        (user) =>
+                            !existingWorkspaceUserIds.includes(user.userId)
+                    )
+
+                    const workspaceUser =
+                        await WorkspaceUser.bulkCreate(newWorkspaceUsers)
 
                     if (workspaceUser) {
                         await WorkspaceUserController.findAll()

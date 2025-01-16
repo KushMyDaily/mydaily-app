@@ -49,6 +49,13 @@ import CustomDatePicker from "../../comps/CustomDatePicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 
+const SlackStatus = Object.freeze({
+  AUTHORIZED: "AUTHORIZED",
+  UNAUTHORIZED: "UNAUTHORIZED",
+  REAUTHORIZED: "REAUTHORIZED",
+  UNDEFINED: "UNDEFINED",
+});
+
 // const customStyles = {
 //   redBorder: {
 //     border: "1px solid red",
@@ -259,6 +266,17 @@ function Settings() {
     } catch (error) {
       null;
     }
+  };
+
+  const checkAuth = (userDetails) => {
+    if (userDetails && userDetails.role) {
+      const hasAdminRole =
+        userDetails.role.includes("ROLE_ORG_ADMIN") ||
+        userDetails.role.includes("ROLE_SUPER_ADMIN");
+
+      return hasAdminRole;
+    }
+    return true;
   };
 
   return (
@@ -543,31 +561,53 @@ function Settings() {
             </Box>
 
             <Box width={"50%"} maxWidth={"470px"} pl={5}>
-              {socialAuth && socialAuth.hasSlack ? (
-                <Alert status="success" variant="subtle" width={"60%"} mb={5}>
-                  <AlertIcon />
-                  <Image src={slackLogo} style={{ width: "25px" }} />
-                  <AlertDescription p={2}>Slack connected</AlertDescription>
-                </Alert>
-              ) : (
-                <Button
-                  className={styles.slackBtn}
-                  colorScheme="white"
-                  variant="solid"
-                  mt={5}
-                  w={"60%"}
-                  p={"0 15px"}
-                  justifyContent={"flex-start"}
-                  leftIcon={<Image src={slackLogo} style={{ width: "25px" }} />}
-                  onClick={() =>
-                    (location.href =
-                      "https://slack.com/oauth/v2/authorize?client_id=4578727160275.4581313497012&scope=channels:history,channels:read,chat:write,commands,conversations.connect:manage,conversations.connect:read,conversations.connect:write,groups:history,groups:read,im:history,users:read,users:read.email,channels:write.invites,groups:write.invites,mpim:write.invites,channels:manage,groups:write,im:write,mpim:write&user_scope=channels:write,channels:write.invites")
-                  }
-                  isDisabled={socialAuth && socialAuth.hasSlack}
-                >
-                  Add to Slack
-                </Button>
-              )}
+              {(() => {
+                switch (socialAuth && socialAuth.hasSlack) {
+                  case SlackStatus.AUTHORIZED:
+                    return (
+                      <Alert
+                        status="success"
+                        variant="subtle"
+                        width={"60%"}
+                        mb={5}
+                      >
+                        <AlertIcon />
+                        <Image src={slackLogo} style={{ width: "25px" }} />
+                        <AlertDescription p={2}>
+                          Slack connected
+                        </AlertDescription>
+                      </Alert>
+                    );
+                  case SlackStatus.REAUTHORIZED:
+                  case SlackStatus.UNDEFINED:
+                    return (
+                      <Button
+                        className={styles.slackBtn}
+                        colorScheme="white"
+                        variant="solid"
+                        mt={5}
+                        mb={5}
+                        w={"60%"}
+                        p={"0 15px"}
+                        justifyContent={"flex-start"}
+                        leftIcon={
+                          <Image src={slackLogo} style={{ width: "25px" }} />
+                        }
+                        onClick={() =>
+                          (location.href =
+                            "https://slack.com/oauth/v2/authorize?client_id=4578727160275.4581313497012&scope=channels:history,channels:read,chat:write,commands,conversations.connect:manage,conversations.connect:read,conversations.connect:write,groups:history,groups:read,im:history,users:read,users:read.email,channels:write.invites,groups:write.invites,mpim:write.invites,channels:manage,groups:write,im:write,mpim:write&user_scope=channels:write,channels:write.invites")
+                        }
+                        isDisabled={!checkAuth(userDetails)}
+                      >
+                        Add to Slack
+                      </Button>
+                    );
+                  case SlackStatus.UNAUTHORIZED:
+                    return null;
+                  default:
+                    return null;
+                }
+              })()}
 
               {socialAuth && socialAuth.hasGoogle ? (
                 <Alert status="success" variant="subtle" width={"60%"} mb={5}>
