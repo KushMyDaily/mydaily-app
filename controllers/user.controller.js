@@ -2,6 +2,13 @@ const db = require('../models')
 const nodemailer = require('nodemailer')
 const { workspaceUser: WorkspaceUser, googleAuth: GoogleAuth, user: User } = db
 
+const slackStatus = Object.freeze({
+    AUTHORIZED: 'AUTHORIZED',
+    UNAUTHORIZED: 'UNAUTHORIZED',
+    REAUTHORIZED: 'REAUTHORIZED',
+    UNDEFINED: 'UNDEFINED',
+})
+
 exports.allAccess = (req, res) => {
     res.status(200).send('Public Content.')
 }
@@ -31,20 +38,76 @@ exports.checkSocialAuth = async (req, res) => {
     }
 
     if (user) {
-        const workspaceUser = await WorkspaceUser.findOne({
-            where: { email: user.email },
-        })
+        let hasSlack
+        if (user && user.workspaceUserIds) {
+            const workspaceUserIds = safeConvertToArray(user.workspaceUserIds)
+            hasSlack = await checkSlackStatus(workspaceUserIds[0])
+        } else {
+            hasSlack = slackStatus.UNDEFINED
+        }
 
         const googleAuthUser = await GoogleAuth.findOne({
             where: { userId: user.id },
         })
-
-        const hasSlack = !!workspaceUser
         const hasGoogle = !!googleAuthUser
 
         return res.status(200).send({ data: { hasSlack, hasGoogle } })
     } else {
         return res.status(401).json({ error: 'User not found' })
+    }
+}
+async function checkSlackStatus(workspaceUser) {
+    try {
+        // Query to fetch OAuth data along with associated workspace user data
+        const oauthData = await db.slackOAuthAccess.findAll({
+            include: [
+                {
+                    model: WorkspaceUser,
+                    through: { attributes: [] }, // Exclude intermediate table data
+                    where: { id: workspaceUser }, // Filter by specific workspace user ID
+                    attributes: ['id', 'name', 'email', 'isAdmin', 'isOwner'], // Adjust the fields you want from workspaceUser
+                },
+            ],
+            attributes: [
+                'id',
+                'teamId',
+                'botToken',
+                'userToken',
+                'needsReauthorization',
+            ], // Adjust the fields you want from slackOAuthAccess
+        })
+
+        if (
+            oauthData[0]?.needsReauthorization &&
+            (oauthData[0]?.workspace_users[0]?.isAdmin ||
+                oauthData[0]?.workspace_users[0]?.isOwner)
+        ) {
+            return slackStatus.REAUTHORIZED
+        } else if (
+            !oauthData[0]?.needsReauthorization &&
+            (oauthData[0]?.workspace_users[0]?.isAdmin ||
+                oauthData[0]?.workspace_users[0]?.isOwner)
+        ) {
+            return slackStatus.AUTHORIZED
+        } else {
+            return slackStatus.UNAUTHORIZED
+        }
+    } catch (error) {
+        console.error('Error fetching OAuth and workspace user data:', error)
+        throw error
+    }
+}
+
+function safeConvertToArray(input) {
+    if (!input) return [] // Return empty array for empty input
+
+    try {
+        const parsed = JSON.parse(input)
+        return Array.isArray(parsed) ? parsed : [parsed]
+    } catch (error) {
+        return input.includes(',')
+            ? input.split(',').map(Number)
+            : [Number(input)]
     }
 }
 
@@ -113,9 +176,16 @@ exports.getProfile = async (req, res) => {
                 'resetToken',
             ],
         })
-            .then((user) => {
+            .then(async (user) => {
                 if (user) {
-                    return res.status(200).send({ data: user })
+                    const roles = await user.getRoles() // Wait for roles to be fetched
+                    const authorities = roles.map(
+                        (role) => 'ROLE_' + role.name.toUpperCase()
+                    )
+
+                    const userData = user.toJSON()
+                    userData.role = authorities
+                    return res.status(200).send({ data: userData })
                 } else {
                     return res.status(401).json({ error: 'User not found' })
                 }
