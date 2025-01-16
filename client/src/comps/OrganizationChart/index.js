@@ -42,7 +42,7 @@ const renderNode = (node, onHandleExapand) => {
         <CardBody data-type="CardBody">
           <Stat>
             <StatLabel>{node.name}</StatLabel>
-            {node.form ? (
+            {node.form && node.form !== null ? (
               <StatNumber color={defineColor(node.form)}>
                 {node.form || 0}
               </StatNumber>
