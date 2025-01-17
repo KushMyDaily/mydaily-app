@@ -664,7 +664,7 @@ function Settings() {
                 ref={btnRef}
                 onClick={onOpen}
               >
-                Manager Conflict
+                Wrong manager? Contact us
               </Button>
               {/*<input type="submit" onClick={getCode} value="Get Events"/>*/}
             </Box>
