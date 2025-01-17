@@ -187,7 +187,7 @@ async function executeCalculationSequentially() {
 
 if (process.env.APP_ENV === 'production') {
     // Schedule the cron job to run at a specific time
-    cron.schedule('0 35 19 * * 1-5', () => {
+    cron.schedule('0 30 10 * * 1-5', () => {
         console.log('Run survey cron job running...')
 
         // Call the controller method directly
