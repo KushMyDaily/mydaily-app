@@ -55,7 +55,7 @@ const ResetPassword = () => {
     if (token && values && values.confirmPassword) {
       axios
         .post(
-          `${process.env.REACT_APP_API_BASE_URL}auth/updatePassword/${token}`,
+          `${process.env.REACT_APP_API_BASE_URL}/api/auth/updatePassword/${token}`,
           { password: values?.confirmPassword },
         )
         .then((res) => {
