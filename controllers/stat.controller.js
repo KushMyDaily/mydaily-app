@@ -354,9 +354,10 @@ async function storeDailyStaticsData() {
             const yourForm = await getYourForm(user.id, todayDate)
 
             if (stressFactorScore && wellBeingScore) {
-                console.log(stressFactorScore)
-                console.log(wellBeingScore)
-                console.log(yourForm)
+                console.log('userID', user.id)
+                console.log('stressFactorScore', stressFactorScore)
+                console.log('wellBeingScore', wellBeingScore)
+                console.log('yourForm', yourForm)
                 try {
                     await StatisticsByDate.create({
                         workload: stressFactorScore['WORKLOAD'],

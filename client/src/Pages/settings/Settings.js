@@ -26,7 +26,7 @@ import {
 } from "@chakra-ui/react";
 import { Icon } from "@chakra-ui/icon";
 import React, { useEffect, useState } from "react";
-import { FaRegFrown } from "react-icons/fa";
+import { FaPencilAlt } from "react-icons/fa";
 import { Formik, Field } from "formik";
 import PageHeader from "../../comps/PageHeader";
 import ImageUpload from "../../comps/ImageUpload";
@@ -340,9 +340,11 @@ function Settings() {
                     ? userProfileDetails.birthday
                     : "",
                   manager:
-                    userProfileDetails && userProfileDetails.Managers
+                    userProfileDetails && userProfileDetails.Managers.length > 0
                       ? userProfileDetails.Managers[0]?.fullname
-                      : "",
+                      : userProfileDetails && userProfileDetails.manager
+                        ? userProfileDetails.manager
+                        : "",
                   position: userProfileDetails
                     ? userProfileDetails.position
                     : "",
@@ -658,13 +660,13 @@ function Settings() {
                 justifyContent={"flex-start"}
                 leftIcon={
                   <Icon fontSize="23px" color={"#000"}>
-                    <FaRegFrown />
+                    <FaPencilAlt />
                   </Icon>
                 }
                 ref={btnRef}
                 onClick={onOpen}
               >
-                Wrong manager? Contact us
+                Modify manager
               </Button>
               {/*<input type="submit" onClick={getCode} value="Get Events"/>*/}
             </Box>
