@@ -1349,14 +1349,12 @@ const testStatWellBeingScore = async (req, res) => {
         console.log(`surveyScore: userId:${userId}`, surveyScore)
 
         if (surveyScore !== 0 && surveyScore > 0) {
-            return res
-                .status(200)
-                .json({
-                    data: {
-                        averageFactorsScore: averageFactorsScore,
-                        surveyScore: surveyScore,
-                    },
-                })
+            return res.status(200).json({
+                data: {
+                    averageFactorsScore: averageFactorsScore,
+                    surveyScore: surveyScore,
+                },
+            })
         }
         return res
             .status(200)
