@@ -28,5 +28,5 @@ module.exports = function (app) {
 
     app.post('/api/auth/fogotPassword', controller.fogotPassword)
 
-    app.post('/auth/updatePassword/:token', controller.updatePassword)
+    app.post('/api/auth/updatePassword/:token', controller.updatePassword)
 }
