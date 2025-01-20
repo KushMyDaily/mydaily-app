@@ -166,6 +166,10 @@ app.get('/api/calculations', (req, res) => {
     executeCalculationSequentially()
     return res.json('calculation')
 })
+app.get('/api/storeDailyStaticsData', (req, res) => {
+    storeDailyStaticsData()
+    return res.json('storeDailyStaticsData')
+})
 ;(async () => {
     // Start your app
     await slackApp.start()
