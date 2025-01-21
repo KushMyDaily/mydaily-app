@@ -7,7 +7,7 @@ export const google = createAsyncThunk(
   async (userId, { dispatch }) => {
     dispatch(googleRequest());
     try {
-      const response = await API.post("/google/auth/", userId);
+      const response = await API.post("/api/google/auth/", userId);
       dispatch(googleSuccess(response.data));
     } catch (error) {
       dispatch(googleFailure(error.response.data.message));
