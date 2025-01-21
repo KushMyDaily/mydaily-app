@@ -367,19 +367,20 @@ function Teams() {
   function mapSubordinateData(initialData, managerData) {
     return initialData.children.map((child) => {
       // Check if the current child matches the managerId
-
-      if (child.id === managerData.data.managerId) {
-        // Push subordinates as children
-        const updatedChildren = managerData.data.subordinates.map((sub) => ({
-          id: sub.id,
-          name: sub.userName,
-          form: sub.form,
-        }));
-        console.log(updatedChildren);
-        return {
-          ...child,
-          children: updatedChildren, // Add subordinates to children
-        };
+      if (managerData && managerData.data) {
+        if (child.id === managerData.data.managerId) {
+          // Push subordinates as children
+          const updatedChildren = managerData.data.subordinates.map((sub) => ({
+            id: sub.id,
+            name: sub.userName,
+            form: sub.form,
+          }));
+          console.log(updatedChildren);
+          return {
+            ...child,
+            children: updatedChildren, // Add subordinates to children
+          };
+        }
       }
       return { ...child, children: [] }; // Ensure non-matching nodes also have a children key
     });
