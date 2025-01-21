@@ -43,12 +43,7 @@ function Header() {
           Hi, {user?.username}
         </Text>
         <Link to={"/settings"}>
-          <Avatar
-            name="Ryan Florence"
-            src="https://bit.ly/ryan-florence"
-            width="44px"
-            height="44px"
-          >
+          <Avatar variant="outline" name="Velsa" width="44px" height="44px">
             <AvatarBadge
               boxSize="12px"
               bg="#05C168"

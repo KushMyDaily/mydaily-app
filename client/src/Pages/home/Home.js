@@ -804,7 +804,6 @@ function Home() {
     <Box>
       <PageHeader
         title="Your Dashboard"
-        subTitle="Friday 6h of March"
         filterOption={false}
         toolTipContent="Welcome to MyDaily! <br/><br/> We want to empower you to take charge of your well-being. That's why we've created a system that combines your own self-assessment with the insights of our AI technology.<br/><br/> Your rating is shared only with your direct manager to make sure you're both on the same page and can prioritize your well-being. But don't worry, the reasons behind your score are strictly private and only for your own self-reflection. You can choose to discuss them or not.<br/><br/> Our AI technology analyzes trends and patterns to provide personalized nudges and suggestions to help you improve your overall well-being. We believe that small changes can lead to big improvements, and we're here to support you every step of the way."
       />
@@ -932,7 +931,7 @@ function Home() {
         >
           Your wellbeing factors
         </Text>
-        <Flex className={styles.factorRow}>
+        <Flex className={styles.factorRow} marginBottom={200}>
           <Box className={styles.factorCol}>
             <CircularProgressCard
               heading="Workload"

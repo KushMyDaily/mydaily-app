@@ -29,7 +29,7 @@ import React, { useEffect, useState } from "react";
 import { FaPencilAlt } from "react-icons/fa";
 import { Formik, Field } from "formik";
 import PageHeader from "../../comps/PageHeader";
-import ImageUpload from "../../comps/ImageUpload";
+//import ImageUpload from "../../comps/ImageUpload";
 import styles from "./settings.module.css";
 
 import { signOutUser } from "../../redux/features/signin/signinThunk";
@@ -44,6 +44,7 @@ import { useDispatch, useSelector } from "react-redux";
 import slackLogo from "../../assets/slack.png";
 import googleLogo from "../../assets/google.png";
 import mydailyLogo from "../../assets/img/mydailyLogo.png";
+import velsaImage from "../../assets/img/velsa.png";
 
 import CustomDatePicker from "../../comps/CustomDatePicker";
 
@@ -70,7 +71,7 @@ const SlackStatus = Object.freeze({
 function Settings() {
   //const [user, setUser] = useState({});
   //const [codeClient, setCodeClient] = useState({});
-  const [uploadedImage, setUploadedImage] = useState(null);
+  //const [uploadedImage, setUploadedImage] = useState(null);
   const [concernText, setConcernText] = useState("");
   const [userProfileDetails, setUserProfileDetails] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -113,9 +114,9 @@ function Settings() {
     }
   }, [userDetails]);
 
-  const handleImageUpload = (imageDataURL) => {
-    setUploadedImage(imageDataURL);
-  };
+  // const handleImageUpload = (imageDataURL) => {
+  //   setUploadedImage(imageDataURL);
+  // };
 
   // function handleCallbackResponse(response) {
   //   // eslint-disable-next-line no-console
@@ -310,7 +311,7 @@ function Settings() {
             justifyContent={"space-between"}
           >
             <Box width={"100%"} textAlign={"center"} mb={3}>
-              {uploadedImage ? (
+              {/* {uploadedImage ? (
                 <Avatar
                   name="Uploaded Preview"
                   src={uploadedImage}
@@ -324,8 +325,9 @@ function Settings() {
                   size={"xl"}
                   mb={3.5}
                 />
-              )}
-              <ImageUpload onImageUpload={handleImageUpload} />
+              )} */}
+              <Avatar name="velsa" src={velsaImage} size={"lg"} mb={3.5} />
+              {/* <ImageUpload onImageUpload={handleImageUpload} /> */}
             </Box>
             <Box width={"50%"} maxWidth={"470px"} pr={5}>
               <Formik
@@ -444,7 +446,12 @@ function Settings() {
                       />
                     </Box>
                     <Box mb={5}>
-                      <Text color={"#606060"} pb={3} fontSize={"sm"}>
+                      <Text
+                        color={"#606060"}
+                        pb={3}
+                        fontSize={"sm"}
+                        fontWeight="medium"
+                      >
                         Birthday
                       </Text>
                       <Field
@@ -455,7 +462,16 @@ function Settings() {
                           field,
                           form: { touched, errors, setFieldValue },
                         }) => (
-                          <div>
+                          <Box
+                            border="1px solid"
+                            borderColor="#e2e8f0" // Light gray border
+                            borderRadius="8px" // Rounded corners
+                            backgroundColor="#f8f9fc" // Light background
+                            padding="0 12px" // Horizontal padding
+                            height="40px" // Fixed height for consistent alignment
+                            display="flex"
+                            alignItems="center" // Vertically centers the content
+                          >
                             {userProfileDetails && (
                               <CustomDatePicker
                                 {...field}
@@ -463,6 +479,17 @@ function Settings() {
                                 onChange={(val) => {
                                   setFieldValue(field.name, val);
                                 }}
+                                customInput={
+                                  <input
+                                    style={{
+                                      width: "100%",
+                                      border: "none",
+                                      outline: "none",
+                                      background: "transparent",
+                                      fontSize: "14px", // Match the font size of other fields
+                                    }}
+                                  />
+                                }
                               />
                             )}
                             {touched[field.name] && errors[field.name] && (
@@ -470,7 +497,7 @@ function Settings() {
                                 {errors[field.name]}
                               </Text>
                             )}
-                          </div>
+                          </Box>
                         )}
                       />
                     </Box>
@@ -645,7 +672,9 @@ function Settings() {
                 p={"0 15px"}
                 justifyContent={"flex-start"}
                 leftIcon={<Image src={mydailyLogo} style={{ width: "25px" }} />}
-                isDisabled={true}
+                onClick={() =>
+                  (window.location = "mailto:adrian@itsmydaily.com")
+                }
               >
                 Reach out to us
               </Button>
