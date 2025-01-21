@@ -18,8 +18,7 @@ module.exports = {
                 {
                     id: 1,
                     title: 'Workload 01',
-                    question:
-                        'To what extent are you able to complete tasks within designated work hours?',
+                    question: 'How manageable does your workload feel?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
@@ -27,21 +26,23 @@ module.exports = {
                     id: 2,
                     title: 'Workload 02',
                     question:
-                        'How effectively can you manage and prioritize your workload?',
+                        'Do you feel you have enough time to complete your tasks?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 3,
                     title: 'Workload 03',
-                    question: 'How in control do you feel over your task load?',
+                    question:
+                        'To what extent do you feel in control of your workload?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 4,
                     title: 'Workload 04',
-                    question: 'How do you feel about your workload difficulty?',
+                    question:
+                        'How comfortable are you with the complexity of your tasks?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
@@ -49,7 +50,7 @@ module.exports = {
                     id: 5,
                     title: 'Time Boundaries 01',
                     question:
-                        'How easily can you disconnect from work during off-hours?',
+                        'How easy is it for you to disconnect from work during your personal time?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
@@ -57,7 +58,7 @@ module.exports = {
                     id: 6,
                     title: 'Time Boundaries 02',
                     question:
-                        'How well can you maintain your scheduled work hours without overtime?',
+                        'Do you feel you maintain a healthy balance between work and personal time?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
@@ -65,22 +66,22 @@ module.exports = {
                     id: 7,
                     title: 'Time Boundaries 03',
                     question:
-                        'How would you rate your ability to take short breaks during your workday?',
+                        'Are you able to take sufficient breaks during your workday?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 8,
                     title: 'Time Boundaries 04',
-                    question: 'How is your work life balance?',
+                    question:
+                        'How satisfied are you with your work-life balance?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 9,
                     title: 'Relationships 01',
-                    question:
-                        'How would you rate your relationship with your manager?',
+                    question: 'How supported do you feel by your manager?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
@@ -88,7 +89,7 @@ module.exports = {
                     id: 10,
                     title: 'Relationships 02',
                     question:
-                        'How effective is the feedback from your manager?',
+                        'How helpful is the feedback you receive from your manager?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
@@ -96,35 +97,39 @@ module.exports = {
                     id: 11,
                     title: 'Relationships 03',
                     question:
-                        'How connected do you feel with your team members?',
+                        'Do you feel your manager is available when you need assistance?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 12,
                     title: 'Relationships 04',
-                    question: 'How valued do you feel by your colleagues?',
+                    question:
+                        'Do you feel clear about what is expected of you?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 13,
                     title: 'Sense of Autonomy 01',
-                    question: 'How free do you feel to decide how you work?',
+                    question:
+                        'Do you feel you have enough freedom in deciding how to do your work?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 14,
                     title: 'Sense of Autonomy 02',
-                    question: 'How trusted do you feel to make decisions?',
+                    question:
+                        'Do you feel trusted to make decisions related to your work?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 15,
                     title: 'Sense of Autonomy 03',
-                    question: 'How valued are your opinions at work?',
+                    question:
+                        'Do you have the opportunity to choose or prioritize your tasks?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
@@ -132,7 +137,7 @@ module.exports = {
                     id: 16,
                     title: 'Sense of Autonomy 04',
                     question:
-                        'What is your ability to choose what you work on?',
+                        'How valued do you feel your opinions are when decisions are made?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
@@ -140,28 +145,31 @@ module.exports = {
                     id: 17,
                     title: 'Communication 01',
                     question:
-                        'How clear are instructions and expectations at work?',
+                        'Does the information you receive help you perform your tasks effectively?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 18,
                     title: 'Communication 02',
-                    question: 'How are your ideas acknowledged?',
+                    question:
+                        'How satisfied are you with the communication within your team?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 19,
                     title: 'Communication 03',
-                    question: 'How effective is team communication?',
+                    question:
+                        'Do you feel heard when you share your thoughts or concerns?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
                 {
                     id: 20,
                     title: 'Communication 04',
-                    question: 'How are your concerns acknowledged?',
+                    question:
+                        'How valued do you feel when sharing ideas with your team?',
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 },
