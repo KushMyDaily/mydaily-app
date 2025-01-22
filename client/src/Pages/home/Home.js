@@ -765,17 +765,17 @@ function Home() {
   const defineBGColor = (score) => {
     switch (true) {
       case score >= 9 && score <= 10:
-        return Color.Amazing;
+        return Color.AmazingBg;
       case score >= 7.5 && score < 9:
-        return Color.Great;
+        return Color.GreatBg;
       case score >= 6 && score < 7.5:
-        return Color.Good;
+        return Color.GoodBg;
       case score >= 4 && score < 6:
-        return Color.Alright;
+        return Color.AlrightBg;
       case score >= 2 && score < 4:
-        return Color.Low;
+        return Color.LowBg;
       case score >= 0 && score < 2:
-        return Color.Exhausted;
+        return Color.ExhaustedBg;
       default:
         return "#000000"; // Handle cases outside defined ranges
     }
