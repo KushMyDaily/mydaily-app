@@ -745,17 +745,17 @@ function Home() {
 
   const defineColor = (score) => {
     switch (true) {
-      case score >= 9.5 && score <= 10:
+      case score >= 9 && score <= 10:
         return Color.Amazing;
-      case score >= 7.5 && score < 9.5:
+      case score >= 7.5 && score < 9:
         return Color.Great;
-      case score >= 5.5 && score < 7.5:
+      case score >= 6 && score < 7.5:
         return Color.Good;
-      case score >= 3.5 && score < 5.5:
+      case score >= 4 && score < 6:
         return Color.Alright;
-      case score >= 1.5 && score < 3.5:
+      case score >= 2 && score < 4:
         return Color.Low;
-      case score >= 0 && score < 1.5:
+      case score >= 0 && score < 2:
         return Color.Exhausted;
       default:
         return "#000000"; // Handle cases outside defined ranges
@@ -764,18 +764,18 @@ function Home() {
 
   const defineBGColor = (score) => {
     switch (true) {
-      case score >= 9.5 && score <= 10:
-        return Color.AmazingBg;
-      case score >= 7.5 && score < 9.5:
-        return Color.GreatBg;
-      case score >= 5.5 && score < 7.5:
-        return Color.GoodBg;
-      case score >= 3.5 && score < 5.5:
-        return Color.AlrightBg;
-      case score >= 1.5 && score < 3.5:
-        return Color.LowBg;
-      case score >= 0 && score < 1.5:
-        return Color.ExhaustedBg;
+      case score >= 9 && score <= 10:
+        return Color.Amazing;
+      case score >= 7.5 && score < 9:
+        return Color.Great;
+      case score >= 6 && score < 7.5:
+        return Color.Good;
+      case score >= 4 && score < 6:
+        return Color.Alright;
+      case score >= 2 && score < 4:
+        return Color.Low;
+      case score >= 0 && score < 2:
+        return Color.Exhausted;
       default:
         return "#000000"; // Handle cases outside defined ranges
     }
@@ -783,17 +783,17 @@ function Home() {
 
   const defineClass = (score) => {
     switch (true) {
-      case score >= 9.5 && score <= 10:
+      case score >= 9 && score <= 10:
         return "amazing";
-      case score >= 7.5 && score < 9.5:
+      case score >= 7.5 && score < 9:
         return "great";
-      case score >= 5.5 && score < 7.5:
+      case score >= 6 && score < 7.5:
         return "good";
-      case score >= 3.5 && score < 5.5:
+      case score >= 4 && score < 6:
         return "alright";
-      case score >= 1.5 && score < 3.5:
+      case score >= 2 && score < 4:
         return "low";
-      case score >= 0 && score < 1.5:
+      case score >= 0 && score < 2:
         return "exhausted";
       default:
         return ""; // Handle cases outside defined ranges
