@@ -19,10 +19,8 @@ const calendar = google.calendar({
 })
 
 const scopes = [
-    'https://www.googleapis.com/auth/calendar',
-    'https://mail.google.com/',
-    'https://www.googleapis.com/auth/gmail.modify',
     'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/calendar.readonly',
 ]
 
 /**
