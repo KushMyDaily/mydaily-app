@@ -403,11 +403,11 @@ function Teams() {
                 <Box className={styles.chartColInner}>
                   <CircularProgressCard
                     heading="Team Form"
-                    percentage={managerData.formScore || 0}
+                    percentage={managerData.teamForm || 0}
                     increase={false}
                     statusText="Increase since last week"
-                    color={defineColor(managerData.formScore || 0)}
-                    bgColor={defineBGColor(managerData.formScore || 0)}
+                    color={defineColor(managerData.teamForm || 0)}
+                    bgColor={defineBGColor(managerData.teamForm || 0)}
                   />
                 </Box>
                 <Box className={styles.chartColInner}>

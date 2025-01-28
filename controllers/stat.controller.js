@@ -347,16 +347,20 @@ async function storeDailyStaticsData() {
                 user.id,
                 todayDate
             )
-            const wellBeingScore = await getStatWellBeingScore(
+            const todayWellBeingScore = await getStatWellBeingScore(
                 user.id,
                 todayDate
             )
-            const yourForm = await getYourForm(user.id, todayDate)
+            const yourForm = await getYourForm(
+                user.id,
+                todayDate,
+                todayWellBeingScore
+            )
 
-            if (stressFactorScore && wellBeingScore) {
+            if (stressFactorScore && todayWellBeingScore) {
                 console.log('userID', user.id)
                 console.log('stressFactorScore', stressFactorScore)
-                console.log('wellBeingScore', wellBeingScore)
+                console.log('wellBeingScore', todayWellBeingScore)
                 console.log('yourForm', yourForm)
                 try {
                     await StatisticsByDate.create({
@@ -365,7 +369,7 @@ async function storeDailyStaticsData() {
                         timeBoundaries: stressFactorScore['TIMEBOUNDARY'],
                         autonomy: stressFactorScore['AUTONOMY'],
                         communication: stressFactorScore['COMMUNICATION'],
-                        wellbeingScore: wellBeingScore,
+                        wellbeingScore: todayWellBeingScore,
                         yourForm: yourForm,
                         userId: user.id,
                     })
@@ -379,7 +383,7 @@ async function storeDailyStaticsData() {
 }
 
 //your form
-async function getYourForm(userId, date) {
+async function getYourForm(userId, date, todayWellbeingScore) {
     if (!userId) {
         throw new Error('User ID is required')
     }
@@ -387,27 +391,33 @@ async function getYourForm(userId, date) {
         throw new Error('Date is required')
     }
     const givenDate = moment(date, 'YYYY-MM-DD') // Parse the given date using Moment.js
-    const fiveDaysAgo = givenDate.clone().subtract(5, 'days') // Subtract 5 days from the given date
+    const fourDaysAgo = givenDate.clone().subtract(4, 'days') // Subtract 5 days from the given date
 
     try {
-        const last5DaysWellbeingStats = await StatisticsByDate.findAll({
+        const last4DaysWellbeingStats = await StatisticsByDate.findAll({
             where: {
                 userId: userId,
                 createdAt: {
                     [Op.between]: [
-                        fiveDaysAgo.toISOString(),
+                        fourDaysAgo.toISOString(),
                         givenDate.toISOString(),
                     ],
                 },
             },
             order: [['createdAt', 'DESC']], // Order by most recent first
         })
-        if (last5DaysWellbeingStats.length !== 0) {
-            const last5DaysWellbeingArray =
-                await generateLast5DaysWellbeingScores(
-                    last5DaysWellbeingStats,
+        if (last4DaysWellbeingStats.length !== 0) {
+            const last4DaysWellbeingArray =
+                await generateLast4DaysWellbeingScores(
+                    last4DaysWellbeingStats,
                     date
                 )
+
+            const last5DaysWellbeingArray = [
+                parseFloat(todayWellbeingScore) || 0,
+                ...last4DaysWellbeingArray,
+            ]
+
             const hasEmptyDays = last5DaysWellbeingArray.some(
                 (score) => score === 0
             )
@@ -461,20 +471,32 @@ async function getYourForm(userId, date) {
             0
         )
 
-        return totalScore.toFixed(2)
+        return totalScore.toFixed(1)
     }
 }
 
-async function generateLast5DaysWellbeingScores(data, referenceDate) {
+async function generateLast4DaysWellbeingScores(data, referenceDate) {
     const result = []
 
     // Parse the reference date using moment.js
     const refDate = moment(getPreviousWeekday(referenceDate), 'YYYY-MM-DD')
 
-    // Create an array of dates for the last 15 days
-    const last5Days = Array.from({ length: 5 }, (_, i) =>
-        refDate.clone().subtract(i, 'days').format('YYYY-MM-DD')
-    )
+    // Create an array of dates for the last 4 days
+    // const last4Days = Array.from({ length: 4 }, (_, i) =>
+    //     refDate.clone().subtract(i, 'days').format('YYYY-MM-DD')
+    // )
+
+    const last4Days = []
+    let daysCount = 0
+    let refDateCopy = refDate.clone() // Clone to avoid mutating the original date
+
+    while (daysCount < 4) {
+        if (refDateCopy.isoWeekday() !== 6 && refDateCopy.isoWeekday() !== 7) {
+            last4Days.push(refDateCopy.format('YYYY-MM-DD'))
+            daysCount++
+        }
+        refDateCopy.subtract(1, 'days')
+    }
 
     // Prepare a map to store the latest wellbeingScore for each date
     const latestWellbeingByDate = {}
@@ -493,7 +515,7 @@ async function generateLast5DaysWellbeingScores(data, referenceDate) {
     })
 
     // Populate the result array with wellbeingScore or null
-    last5Days.forEach((day) => {
+    last4Days.forEach((day) => {
         if (latestWellbeingByDate[day] !== undefined) {
             result.push(latestWellbeingByDate[day])
         } else {
@@ -569,63 +591,51 @@ async function getStatWellBeingScore(userId, date) {
         // Calculate the average by dividing by the number of factors
         const averageFactorsScore = (totalSum / factors.length).toFixed(2) // Divide by 5
 
-        const isFactorExist = checkFactorAccordingDate(date)
-        if (isFactorExist) {
-            const surveyScore = await surveyScoreCalculate(
-                userId,
-                getSurveyIds(isFactorExist),
-                date,
-                0 //Answer Type [answer 1, answer 2] use index number [0,1]
-            )
+        const surveyScore = await surveyScoreCalculation(
+            userId,
+            getPreviousWeekday(date)
+        )
 
-            console.log(`averageFactorsScore`, averageFactorsScore)
-            console.log(`surveyScore`, surveyScore)
-
-            if (surveyScore !== 0 && surveyScore > 0) {
-                const totalWellbeingScoreByDay = (
-                    averageFactorsScore * 0.25 +
-                    surveyScore * 0.75
-                ).toFixed(2)
-                return totalWellbeingScoreByDay
-                // console.log(finalWorkloadScore)
-                // res.status(200).json({
-                //     success: true,
-                //     result: finalWorkloadScore.toFixed(2),
-                // })
-            } else {
-                return averageFactorsScore
-                // console.log(integrationScore)
-                // res.status(200).json({
-                //     success: true,
-                //     result: integrationScore.toFixed(2),
-                // })
-            }
+        if (surveyScore !== 0 && surveyScore > 0) {
+            const totalWellbeingScoreByDay = (
+                averageFactorsScore * 0.25 +
+                surveyScore * 0.75
+            ).toFixed(1)
+            return totalWellbeingScoreByDay
         }
+        return 0
     } catch (error) {
         console.log(error)
         return error
     }
 }
 
-function checkFactorAccordingDate(dateString) {
-    const date = new Date(dateString)
-    const dayOfWeek = date.getDay()
+async function surveyScoreCalculation(userId, refDate) {
+    try {
+        const entries = await SurveyAnswer.findOne({
+            where: {
+                userId: userId,
+                createdAt: {
+                    [Op.between]: [
+                        `${refDate} 00:00:00`,
+                        `${refDate} 23:59:59`,
+                    ],
+                },
+            },
+        })
 
-    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-        switch (dayOfWeek) {
-            case 1:
-                return 'WORKLOAD'
-            case 2:
-                return 'TIMEBOUNDARY'
-            case 3:
-                return 'RELATIONSHIP'
-            case 4:
-                return 'AUTONOMY'
-            case 5:
-                return 'COMMUNICATION'
-            default:
-                return '' // or handle unknown category
+        if (
+            (entries && entries !== null) ||
+            (entries && entries.answers !== null)
+        ) {
+            const answer = JSON.parse(entries.answers)
+            return answer[0]
         }
+
+        return 0
+    } catch (error) {
+        console.error('surveyScoreCalc error: ', error)
+        return 0
     }
 }
 
@@ -648,14 +658,14 @@ const getStat = async (userId, stressFactor, date) => {
         if (surveyScore !== 0 && surveyScore > 0) {
             const finalWorkloadScore =
                 integrationScore * 0.25 + surveyScore * 0.75
-            return finalWorkloadScore.toFixed(2)
+            return finalWorkloadScore.toFixed(1)
             // console.log(finalWorkloadScore)
             // res.status(200).json({
             //     success: true,
             //     result: finalWorkloadScore.toFixed(2),
             // })
         } else {
-            return integrationScore.toFixed(2)
+            return integrationScore.toFixed(1)
             // console.log(integrationScore)
             // res.status(200).json({
             //     success: true,
