@@ -271,7 +271,7 @@ const getAverages = async (data, givenDate) => {
             : (
                   filteredData.reduce((sum, item) => sum + item.yourForm, 0) /
                   filteredData.length
-              ).toFixed(2)
+              ).toFixed(1)
     // Calculate the average of wellbeing for the last 30 days
     const stressFactorAverageLast30Days =
         filteredData.length === 0
@@ -288,12 +288,12 @@ const getAverages = async (data, givenDate) => {
                               5,
                       0
                   ) / filteredData.length
-              ).toFixed(2)
+              ).toFixed(1)
 
     // Calculate the average of yourform for all available data
     const formAverageAllData = (
         data.reduce((sum, item) => sum + item.yourForm, 0) / data.length
-    ).toFixed(2)
+    ).toFixed(1)
 
     // Calculate the average of wellbeing for all available data
     const stressFactorAverageAllData = (
@@ -308,7 +308,7 @@ const getAverages = async (data, givenDate) => {
                     5,
             0
         ) / data.length
-    ).toFixed(2)
+    ).toFixed(1)
 
     return {
         formAverageLast30Days,
@@ -952,14 +952,14 @@ async function getTeamFormData(req, res) {
                         ? (
                               data.existing.totalYourForm /
                               data.existing.countRecords
-                          ).toFixed(2)
+                          ).toFixed(1)
                         : 0
                 managerData.stressFactors.workload =
                     data.existing.totalWorkload / data.existing.countRecords > 0
                         ? (
                               data.existing.totalWorkload /
                               data.existing.countRecords
-                          ).toFixed(2)
+                          ).toFixed(1)
                         : 0
                 managerData.stressFactors.relationship =
                     data.existing.totalRelationship /
@@ -968,7 +968,7 @@ async function getTeamFormData(req, res) {
                         ? (
                               data.existing.totalRelationship /
                               data.existing.countRecords
-                          ).toFixed(2)
+                          ).toFixed(1)
                         : 0
                 managerData.stressFactors.timeBoundries =
                     data.existing.totalTimeBoundaries /
@@ -977,14 +977,14 @@ async function getTeamFormData(req, res) {
                         ? (
                               data.existing.totalTimeBoundaries /
                               data.existing.countRecords
-                          ).toFixed(2)
+                          ).toFixed(1)
                         : 0
                 managerData.stressFactors.autonomy =
                     data.existing.totalAutonomy / data.existing.countRecords > 0
                         ? (
                               data.existing.totalAutonomy /
                               data.existing.countRecords
-                          ).toFixed(2)
+                          ).toFixed(1)
                         : 0
                 managerData.stressFactors.communication =
                     data.existing.totalCommunication /
@@ -993,7 +993,7 @@ async function getTeamFormData(req, res) {
                         ? (
                               data.existing.totalCommunication /
                               data.existing.countRecords
-                          ).toFixed(2)
+                          ).toFixed(1)
                         : 0
             }
 
@@ -1005,7 +1005,7 @@ async function getTeamFormData(req, res) {
                         ? (
                               data.last30Days.totalYourForm /
                               data.last30Days.countRecords
-                          ).toFixed(2)
+                          ).toFixed(1)
                         : 0
             }
 
@@ -1017,7 +1017,7 @@ async function getTeamFormData(req, res) {
                         ? (
                               data.last90Days.totalYourForm /
                               data.last90Days.countRecords
-                          ).toFixed(2)
+                          ).toFixed(1)
                         : 0
             }
 
@@ -1027,7 +1027,7 @@ async function getTeamFormData(req, res) {
                         ? (
                               data.allTime.totalYourForm /
                               data.allTime.countRecords
-                          ).toFixed(2)
+                          ).toFixed(1)
                         : 0
             }
 
@@ -1039,7 +1039,7 @@ async function getTeamFormData(req, res) {
                             month.totalYourForm / month.countRecords > 0
                                 ? (
                                       month.totalYourForm / month.countRecords
-                                  ).toFixed(2)
+                                  ).toFixed(1)
                                 : 0,
                     }
                 })

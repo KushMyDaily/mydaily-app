@@ -36,8 +36,8 @@ import {
   managerViewStat,
   getSubordinatesforms,
 } from "../../redux/features/statsData/statDataThunk";
-import goodIcon from "../../assets/img/check-icon.png";
-import needAttentionError from "../../assets/img/red-error.png";
+import goodIcon from "../../assets/img/check.png";
+import needAttentionError from "../../assets/img/danger.png";
 import coutionError from "../../assets/img/yellow-error.png";
 import { LuZoomIn, LuZoomOut, LuRefreshCw } from "react-icons/lu";
 
@@ -85,6 +85,8 @@ const OPTIONS = {
         fontWeight: "500",
       },
     },
+    min: 1,
+    max: 10,
   },
   grid: {
     show: false,
