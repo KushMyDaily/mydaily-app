@@ -37,6 +37,7 @@ import {
   getSubordinatesforms,
 } from "../../redux/features/statsData/statDataThunk";
 import goodIcon from "../../assets/img/check.png";
+import hourGlass from "../../assets/img/hourglass.png";
 import needAttentionError from "../../assets/img/danger.png";
 import coutionError from "../../assets/img/yellow-error.png";
 import { LuZoomIn, LuZoomOut, LuRefreshCw } from "react-icons/lu";
@@ -329,8 +330,10 @@ function Teams() {
         return goodIcon;
       case value >= 5.5 && value < 7.5:
         return coutionError;
-      case value >= 0 && value < 5.5:
+      case value > 0 && value < 5.5:
         return needAttentionError;
+      case value === 0:
+        return hourGlass;
       default:
         return ""; // Handle cases outside defined ranges
     }
@@ -545,6 +548,7 @@ function Teams() {
                   <OrganizationChart
                     data={organizationData}
                     onHandleExapand={onHandleExpand}
+                    teamForm={managerData.teamForm}
                   />
                 </TransformComponent>
               </TransformWrapper>

@@ -10,6 +10,7 @@ import {
   Card,
   CardBody,
   Flex,
+  Text,
 } from "@chakra-ui/react";
 import Color from "../../utils/Color";
 import { IconButton } from "@chakra-ui/react";
@@ -41,9 +42,13 @@ const renderNode = (node, onHandleExapand) => {
         <CardBody data-type="CardBody">
           <Stat>
             <StatLabel>{node.name}</StatLabel>
-            <StatNumber color={defineColor(node.form)}>
-              {node.form || 0}
-            </StatNumber>
+            {node.form ? (
+              <StatNumber color={defineColor(node.form)}>
+                {node.form || 0}
+              </StatNumber>
+            ) : (
+              <Text color={Color.Exhausted}>No Team</Text>
+            )}
           </Stat>
           {node.form && (
             <IconButton
@@ -60,7 +65,7 @@ const renderNode = (node, onHandleExapand) => {
   );
 };
 
-const renderRoot = (name) => {
+const renderRoot = (name, teamForm) => {
   return (
     <Flex justify="center">
       <Card
@@ -83,6 +88,9 @@ const renderRoot = (name) => {
               />
               <TagLabel>{name}</TagLabel>
             </Tag>
+            <StatNumber color={defineColor(teamForm)}>
+              {teamForm || 0}
+            </StatNumber>
           </Stat>
         </CardBody>
       </Card>
@@ -98,13 +106,13 @@ const renderTree = (node, onHandleExapand) => {
 };
 
 // Main Component
-const OrganizationChart = ({ data, onHandleExapand }) => {
+const OrganizationChart = ({ data, teamForm, onHandleExapand }) => {
   return (
     <Tree
       lineWidth="2px"
       lineColor="green"
       lineBorderRadius="10px"
-      label={renderRoot(data.name)}
+      label={renderRoot(data.name, teamForm)}
     >
       {data.children &&
         data.children.map((child) => renderTree(child, onHandleExapand))}
