@@ -25,5 +25,5 @@ module.exports = function (app) {
         stat.getSubordinatesFormData
     )
     //test api
-    app.post('/api/stat/test/wellBeingScore', stat.testStatWellBeingScore)
+    app.post('/api/stat/test/wellbeingscore', stat.testStatWellBeingScore)
 }
