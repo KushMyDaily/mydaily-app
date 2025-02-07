@@ -591,10 +591,7 @@ async function getStatWellBeingScore(userId, date) {
         // Calculate the average by dividing by the number of factors
         const averageFactorsScore = (totalSum / factors.length).toFixed(2) // Divide by 5
 
-        const surveyScore = await surveyScoreCalculation(
-            userId,
-            getPreviousWeekday(date)
-        )
+        const surveyScore = await surveyScoreCalculation(userId, date)
 
         if (surveyScore !== 0 && surveyScore > 0) {
             const totalWellbeingScoreByDay = (
@@ -1337,10 +1334,7 @@ const testStatWellBeingScore = async (req, res) => {
         // Calculate the average by dividing by the number of factors
         const averageFactorsScore = (totalSum / factors.length).toFixed(2) // Divide by 5
 
-        const surveyScore = await surveyScoreCalculation(
-            userId,
-            getPreviousWeekday(date)
-        )
+        const surveyScore = await surveyScoreCalculation(userId, date)
 
         console.log(
             `averageFactorsScore: userId:${userId}`,
@@ -1349,14 +1343,12 @@ const testStatWellBeingScore = async (req, res) => {
         console.log(`surveyScore: userId:${userId}`, surveyScore)
 
         if (surveyScore !== 0 && surveyScore > 0) {
-            return res
-                .status(200)
-                .json({
-                    data: {
-                        averageFactorsScore: averageFactorsScore,
-                        surveyScore: surveyScore,
-                    },
-                })
+            return res.status(200).json({
+                data: {
+                    averageFactorsScore: averageFactorsScore,
+                    surveyScore: surveyScore,
+                },
+            })
         }
         return res
             .status(200)
