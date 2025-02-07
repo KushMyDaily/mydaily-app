@@ -603,7 +603,7 @@ async function getStatWellBeingScore(userId, date) {
             ).toFixed(1)
             return totalWellbeingScoreByDay
         }
-        return 0
+        return averageFactorsScore
     } catch (error) {
         console.log(error)
         return error
@@ -629,6 +629,8 @@ async function surveyScoreCalculation(userId, refDate) {
             (entries && entries.answers !== null)
         ) {
             const answer = JSON.parse(entries.answers)
+            console.log(`answer userId:${userId} date:${refDate}`, answer)
+
             return answer[0]
         }
 
@@ -1310,6 +1312,61 @@ const getAllsubordinatesFormData = async (subordinates, date) => {
     return sub
 }
 
+///// Testing functions
+const testStatWellBeingScore = async (req, res) => {
+    const { userId, date } = req.body
+
+    if (!userId) {
+        throw new Error('User ID is required')
+    }
+    if (!date) {
+        throw new Error('Date is required')
+    }
+
+    try {
+        let totalSum = 0 // Initialize the total sum
+
+        // Use Promise.all to wait for all asynchronous operations to complete
+        await Promise.all(
+            factors.map(async (factor) => {
+                const value = await getStat(userId, factor, date)
+                totalSum += parseFloat(value) || 0 // Accumulate the sum, ensuring to handle NaN
+            })
+        )
+
+        // Calculate the average by dividing by the number of factors
+        const averageFactorsScore = (totalSum / factors.length).toFixed(2) // Divide by 5
+
+        const surveyScore = await surveyScoreCalculation(
+            userId,
+            getPreviousWeekday(date)
+        )
+
+        console.log(
+            `averageFactorsScore: userId:${userId}`,
+            averageFactorsScore
+        )
+        console.log(`surveyScore: userId:${userId}`, surveyScore)
+
+        if (surveyScore !== 0 && surveyScore > 0) {
+            return res
+                .status(200)
+                .json({
+                    data: {
+                        averageFactorsScore: averageFactorsScore,
+                        surveyScore: surveyScore,
+                    },
+                })
+        }
+        return res
+            .status(200)
+            .json({ data: { averageFactorsScore: averageFactorsScore } })
+    } catch (error) {
+        console.log(error)
+        return error
+    }
+}
+
 module.exports = {
     getStatWellBeingScore: getStatWellBeingScore,
     getStatStressFactorsScore: getStatStressFactorsScore,
@@ -1321,4 +1378,5 @@ module.exports = {
     getcalenderData: getcalenderData,
     getTeamFormData: getTeamFormData,
     getSubordinatesFormData: getSubordinatesFormData,
+    testStatWellBeingScore: testStatWellBeingScore,
 }

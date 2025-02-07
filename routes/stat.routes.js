@@ -24,4 +24,6 @@ module.exports = function (app) {
         '/api/stat/manager/subordinatesforms/graph',
         stat.getSubordinatesFormData
     )
+    //test api
+    app.post('/api/stat/test/wellBeingScore', stat.testStatWellBeingScore)
 }
