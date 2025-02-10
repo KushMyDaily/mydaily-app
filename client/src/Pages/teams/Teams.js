@@ -94,23 +94,23 @@ const OPTIONS = {
   },
   colors: [
     function ({ value }) {
-      if (value > 5) {
-        return "#11845B";
+      if (value >= 9 && value <= 10) {
+        return Color.Amazing;
       }
-      if (value > 4) {
-        return "#05C168";
+      if (value >= 7.5 && value < 9) {
+        return Color.Great;
       }
-      if (value > 3) {
-        return "#98DC7F";
+      if (value >= 6 && value < 7.5) {
+        return Color.Good;
       }
-      if (value > 2) {
-        return "#FFCA43";
+      if (value >= 4 && value < 6) {
+        return Color.Alright;
       }
-      if (value > 1) {
-        return "#FF9E2C";
+      if (value >= 2 && value < 4) {
+        return Color.Low;
       }
-      if (value > 0) {
-        return "#FF6871";
+      if (value >= 0 && value < 2) {
+        return Color.Exhausted;
       } else {
         return "#000000";
       }
@@ -514,7 +514,7 @@ function Teams() {
               marginBottom={7}
               color={"#000000"}
             >
-              Your wellbeing factors
+              Team Overview
             </Text>
             <Text
               fontSize={"14px"}
