@@ -1309,6 +1309,43 @@ const getAllsubordinatesFormData = async (subordinates, date) => {
     return sub
 }
 
+const getWellBeingFactorOvertime = async (req, res) => {
+    const { userId, factor } = req.body
+
+    if (!userId) {
+        return res.status(401).json({ error: 'User is required' })
+    }
+    if (!factor) {
+        return res.status(401).json({ error: 'Factor is required' })
+    }
+    try {
+        const result = await getWellBeingFactorOvertimeData(userId, factor)
+
+        return res.status(200).json({ data: result })
+    } catch (error) {
+        return res.status(401).json({ error: error })
+    }
+}
+
+const getWellBeingFactorOvertimeData = async (userId, factor) => {
+    if (factor) {
+        const result = await StatisticsByDate.findAll({
+            where: {
+                userId: userId,
+            },
+            attributes: [
+                factor,
+                [fn('DATE', col('createdAt')), 'createdAt'], // Convert to date only
+            ],
+            order: [['createdAt', 'ASC']], // Order by createdAt descending
+            raw: true,
+        })
+
+        return result
+    }
+    return null
+}
+
 ///// Testing functions
 const testStatWellBeingScore = async (req, res) => {
     const { userId, date } = req.body
@@ -1370,5 +1407,6 @@ module.exports = {
     getcalenderData: getcalenderData,
     getTeamFormData: getTeamFormData,
     getSubordinatesFormData: getSubordinatesFormData,
+    getWellBeingFactorOvertime: getWellBeingFactorOvertime,
     testStatWellBeingScore: testStatWellBeingScore,
 }

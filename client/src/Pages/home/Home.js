@@ -1,5 +1,21 @@
 /* eslint-disable no-unused-vars */
-import { Box, Card, CardBody, CardHeader, Flex, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Card,
+  CardBody,
+  CardHeader,
+  Flex,
+  Text,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Button,
+} from "@chakra-ui/react";
 import React, { useState, useEffect } from "react";
 import moment from "moment";
 import PageHeader from "../../comps/PageHeader";
@@ -11,6 +27,7 @@ import {
   wellbeingStat,
   monthStat,
   calendaStat,
+  getWellBeingFactorOvertime,
 } from "../../redux/features/statsData/statDataThunk";
 import { useDispatch, useSelector } from "react-redux";
 import "react-calendar/dist/Calendar.css";
@@ -20,6 +37,7 @@ import CircularProgressCard from "../../comps/CircularProgressCard";
 import ProgressBar from "./../../comps/ProgressBar";
 import styles from "./home.module.css";
 import { API } from "../../services/apiBuilder";
+import ZoomableChart from "../../comps/Charts/ZoomableChart/ZoomableChart";
 
 const OPTIONS = {
   chart: {
@@ -147,6 +165,14 @@ const inputDates = [
   { date: new Date("2024-10-08"), tooltip: "great" },
 ];
 
+const factorTableField = {
+  Workload: "workload",
+  Relationship: "relationship",
+  TimeBoundaries: "timeBoundaries",
+  Autonomy: "autonomy",
+  Communication: "communication",
+};
+
 function Home() {
   const [selectedAmazing, setSelectedAmazing] = useState([]);
   const [selectedGreat, setSelectedGreat] = useState([]);
@@ -186,8 +212,11 @@ function Home() {
     calendarLoading,
     calendarError,
     calendar,
+    wellBeingFactorOvertime,
   } = useSelector((state) => state.statsData);
   const dispatch = useDispatch();
+  const [isOpen, setIsOpen] = useState(false);
+  // const { isOpen, onOpen, onClose } = useDisclosure();
 
   // test restricting the calendar
   const currentDate = new Date();
@@ -406,325 +435,6 @@ function Home() {
     return "";
   };
 
-  // All the queries for the scores
-  //  const FETCH_WELLBEING_SCORE = `
-  //   query ListScoresForSpecificUserAndDate($filter: ModelWellBeingScoreFilterInput!) {
-  //       listWellBeingScores(filter: $filter) {
-  //         items {
-  //           wellbeingScore
-  //         }
-  //       }
-  //     }
-  //   `;
-
-  //   const FETCH_WORKLOAD_SCORE = `
-  //   query ListScoresForSpecificUserAndDate($filter: ModelWorkloadScoreFilterInput!) {
-  //       listWorkloadScores(filter: $filter) {
-  //         items {
-  //           workloadScore
-  //         }
-  //       }
-  //     }
-  //   `;
-
-  //   const FETCH_AUTONOMY_SCORE = `
-  //   query ListScoresForSpecificUserAndDate($filter: ModelAutonomyScoreFilterInput!) {
-  //       listAutonomyScores(filter: $filter) {
-  //         items {
-  //           workloadScore
-  //         }
-  //       }
-  //     }
-  //   `;
-
-  //   const FETCH_COMMUNICATION_SCORE = `
-  //   query ListScoresForSpecificUserAndDate($filter: ModelCommunicationScoreFilterInput!) {
-  //       listCommunicationScores(filter: $filter) {
-  //         items {
-  //           workloadScore
-  //         }
-  //       }
-  //     }
-  //   `;
-
-  //   const FETCH_RELATIONSHIPS_SCORE = `
-  //   query ListScoresForSpecificUserAndDate($filter: ModelRelationshipsScoreFilterInput!) {
-  //       listRelationshipsScores(filter: $filter) {
-  //         items {
-  //           workloadScore
-  //         }
-  //       }
-  //     }
-  //   `;
-
-  //   const FETCH_TIMEBOUNDARIES_SCORE = `
-  //   query ListScoresForSpecificUserAndDate($filter: ModelTimeBoundariesScoreFilterInput!) {
-  //       listTimeBoundariesScores(filter: $filter) {
-  //         items {
-  //           workloadScore
-  //         }
-  //       }
-  //     }
-  //   `;
-
-  //   const FETCH_WELLBEING_SCORES_BY_DATE_RANGE = `
-  //   query FetchWellbeingScoresByDateRange($filter: ModelWellBeingScoreFilterInput) {
-  //     listWellBeingScores(filter: $filter) {
-  //       items {
-  //         wellbeingScore
-  //         createdDate
-  //       }
-  //     }
-  //   }
-  // `;
-
-  //   // UseEffect for all the Scores
-  //   useEffect(() => {
-
-  //     // Get the current user's email
-  //     const fetchUserEmail = async () => {
-  //       try {
-  //         const user = await Auth.currentAuthenticatedUser();
-  //         const userEmail = user.attributes.email;
-  //         //console.log("User email:", userEmail);
-  //         return userEmail;
-  //       } catch (error) {
-  //         console.error("Error fetching user:", error);
-  //       }
-  //     };
-
-  //     // Get yesterday's date in YYYY-MM-DD format
-  //     const getYesterdayDateString = () => {
-  //       const today = new Date();
-  //       const yesterday = new Date(today.setDate(today.getDate() - 1));
-  //       const dd = String(yesterday.getDate()).padStart(2, '0');
-  //       const mm = String(yesterday.getMonth() + 1).padStart(2, '0'); // January is 0!
-  //       const yyyy = yesterday.getFullYear();
-  //       return `${yyyy}-${mm}-${dd}`;
-  //     }
-
-  //     // Fetch the WellBeing score
-  //     const fetchWellBeingScore = async () => {
-  //       try {
-  //         const userEmail = await fetchUserEmail();
-  //         const filter = {
-  //           userEmail: { eq: userEmail },
-  //           createdDate: { eq: getYesterdayDateString() }
-  //         };
-  //         const result = await API.graphql(graphqlOperation(FETCH_WELLBEING_SCORE, { filter: filter }));
-  //         //console.log("Well-being score:", result);
-  //         if (result.data.listWellBeingScores.items && result.data.listWellBeingScores.items.length > 0) {
-  //           setWellBeingScore(parseFloat(result.data.listWellBeingScores.items[0].wellbeingScore).toFixed(1));
-  //         }
-  //       } catch (error) {
-  //         console.error("Error fetching well-being score:", error);
-  //       }
-  //     };
-
-  //     // Fetch the WellBeing score
-  //     const fetchWellBeingScorePerDate = async (date) => {
-  //       console.log("date 1", date)
-  //       date = formatDate(date);
-  //       console.log("date 1", date)
-  //       try {
-  //         const userEmail = await fetchUserEmail();
-  //         const filter = {
-  //           userEmail: { eq: userEmail },
-  //           createdDate: { eq: date }
-  //         };
-  //         const result = await API.graphql(graphqlOperation(FETCH_WELLBEING_SCORE, { filter: filter }));
-  //         //console.log("Well-being score:", result);
-  //         if (result.data.listWellBeingScores.items && result.data.listWellBeingScores.items.length > 0) {
-  //           if (parseFloat(result.data.listWellBeingScores.items[0].wellbeingScore).toFixed(1) > 5) {
-  //             return {date: date, tooltip: "amazing"};
-  //           } else if (parseFloat(result.data.listWellBeingScores.items[0].wellbeingScore).toFixed(1) > 4) {
-  //             return {date: date, tooltip: "great"};
-  //           } else if (parseFloat(result.data.listWellBeingScores.items[0].wellbeingScore).toFixed(1) > 3) {
-  //             return {date: date, tooltip: "good"};
-  //           } // and more ...
-  //         }
-  //       } catch (error) {
-  //         console.error("Error fetching well-being score:", error);
-  //       }
-  //     };
-
-  //     const fetchWorkloadScore = async () => {
-  //       try {
-  //         const userEmail = await fetchUserEmail();
-  //         const filter = {
-  //           userEmail: { eq: userEmail },
-  //           createdDate: { eq: getYesterdayDateString() }
-  //         };
-  //         const result = await API.graphql(graphqlOperation(FETCH_WORKLOAD_SCORE, { filter: filter }));
-  //         //console.log("Workload score:", result);
-  //         if (result.data.listWorkloadScores.items && result.data.listWorkloadScores.items.length > 0) {
-  //           setWorkloadScore(parseFloat(result.data.listWorkloadScores.items[0].workloadScore).toFixed(1));
-  //         }
-  //       } catch (error) {
-  //         console.error("Error fetching workload score:", error);
-  //       }
-  //     };
-
-  //     const fetchAutonomyScore = async () => {
-  //       try {
-  //         const userEmail = await fetchUserEmail();
-  //         const filter = {
-  //           userEmail: { eq: userEmail },
-  //           createdDate: { eq: getYesterdayDateString() }
-  //         };
-  //         const result = await API.graphql(graphqlOperation(FETCH_AUTONOMY_SCORE, { filter: filter }));
-  //         //console.log("Autonomy score:", result);
-  //         if (result.data.listAutonomyScores.items && result.data.listAutonomyScores.items.length > 0) {
-  //           setAutonomyScore(parseFloat(result.data.listAutonomyScores.items[0].workloadScore).toFixed(1));
-  //         }
-  //       } catch (error) {
-  //         console.error("Error fetching autonomy score:", error);
-  //       }
-  //     }
-
-  //     const fetchCommunicationScore = async () => {
-  //       try {
-  //         const userEmail = await fetchUserEmail();
-  //         const filter = {
-  //           userEmail: { eq: userEmail },
-  //           createdDate: { eq: getYesterdayDateString() }
-  //         };
-  //         const result = await API.graphql(graphqlOperation(FETCH_COMMUNICATION_SCORE, { filter: filter }));
-  //         //console.log("Communication score:", result);
-  //         if (result.data.listCommunicationScores.items && result.data.listCommunicationScores.items.length > 0) {
-  //           setCommunicationScore(parseFloat(result.data.listCommunicationScores.items[0].workloadScore).toFixed(1));
-  //         }
-  //       } catch (error) {
-  //         console.error("Error fetching communication score:", error);
-  //       }
-  //     }
-
-  //     const fetchRelationshipsScore = async () => {
-  //       try {
-  //         const userEmail = await fetchUserEmail();
-  //         const filter = {
-  //           userEmail: { eq: userEmail },
-  //           createdDate: { eq: getYesterdayDateString() }
-  //         };
-  //         const result = await API.graphql(graphqlOperation(FETCH_RELATIONSHIPS_SCORE, { filter: filter }));
-  //         //console.log("Relationships score:", result);
-  //         if (result.data.listRelationshipsScores.items && result.data.listRelationshipsScores.items.length > 0) {
-  //           setRelationshipsScore(parseFloat(result.data.listRelationshipsScores.items[0].workloadScore).toFixed(1));
-  //         }
-  //       } catch (error) {
-  //         console.error("Error fetching relationships score:", error);
-  //       }
-  //     }
-
-  //     const fetchTimeBoundariesScore = async () => {
-  //       try {
-  //         const userEmail = await fetchUserEmail();
-  //         const filter = {
-  //           userEmail: { eq: userEmail },
-  //           createdDate: { eq: getYesterdayDateString() }
-  //         };
-  //         const result = await API.graphql(graphqlOperation(FETCH_TIMEBOUNDARIES_SCORE, { filter: filter }));
-  //         //console.log("Time boundaries score:", result);
-  //         if (result.data.listTimeBoundariesScores.items && result.data.listTimeBoundariesScores.items.length > 0) {
-  //           setTimeBoundariesScore(parseFloat(result.data.listTimeBoundariesScores.items[0].workloadScore).toFixed(1));
-  //         }
-  //       } catch (error) {
-  //         console.error("Error fetching time boundaries score:", error);
-  //       }
-  //     }
-
-  //     fetchWellBeingScore();
-  //     fetchWorkloadScore();
-  //     fetchAutonomyScore();
-  //     fetchCommunicationScore();
-  //     fetchRelationshipsScore();
-  //     fetchTimeBoundariesScore();
-
-  //     // ... (other existing code)
-  //   }, []);
-
-  // Needs to be rewrote
-  // async function fetchAverageWellbeingScoresForYear(userEmail) {
-  //   let monthlyAverages = [];
-
-  //   for(let month = 1; month <= 12; month++) {
-  //       let adjustedMonth = month < 10 ? `0${month}` : `${month}`;
-  //       let currentYearString = new Date().getFullYear().toString();
-  //       const startDate = `${currentYearString}-${adjustedMonth}-01`;
-  //       const endDate = `${currentYearString}-${adjustedMonth}-31`;
-
-  //       const filter = {
-  //           userEmail: { eq: userEmail },
-  //           createdDate: { between: [startDate, endDate] }
-  //       };
-
-  //       const result = await API.graphql(graphqlOperation(FETCH_WELLBEING_SCORES_BY_DATE_RANGE, { filter: filter }));
-
-  //       let sum = 0;
-  //       const items = result.data.listWellBeingScores.items;
-  //       items.forEach(item => {
-  //           sum += item.wellbeingScore;
-  //       });
-
-  //       if(items.length === 0) {
-  //           monthlyAverages.push(0);
-  //       } else {
-  //           monthlyAverages.push(sum / items.length);
-  //       }
-  //   }
-  //   return [{data: monthlyAverages}];
-  // }
-
-  // async function fetchAverageWellbeingScores(userEmail) {
-  //   // Get current date
-  //   const currentDate = new Date();
-
-  //   // Calculate date 30 days ago
-  //   const thirtyDaysAgo = new Date(currentDate);
-  //   thirtyDaysAgo.setDate(currentDate.getDate() - 30);
-
-  //   // Fetch wellbeingScores for the last 30 days
-  //   let filterForLast30Days = {
-  //       userEmail: { eq: userEmail },
-  //       createdDate: { between: [thirtyDaysAgo.toISOString().split('T')[0], currentDate.toISOString().split('T')[0]] }
-  //   };
-  //   const resultLast30Days = await API.graphql(graphqlOperation(FETCH_WELLBEING_SCORES_BY_DATE_RANGE, { filter: filterForLast30Days }));
-  //   const itemsLast30Days = resultLast30Days.data.listWellBeingScores.items;
-  //   const averageLast30Days = itemsLast30Days.reduce((acc, item) => acc + item.wellbeingScore, 0) / itemsLast30Days.length;
-
-  //   // Fetch all wellbeingScores
-  //   let filterForAllTime = {
-  //       userEmail: { eq: userEmail }
-  //   };
-  //   const resultAllTime = await API.graphql(graphqlOperation(FETCH_WELLBEING_SCORES_BY_DATE_RANGE, { filter: filterForAllTime }));
-  //   const itemsAllTime = resultAllTime.data.listWellBeingScores.items;
-  //   const averageAllTime = itemsAllTime.reduce((acc, item) => acc + item.wellbeingScore, 0) / itemsAllTime.length;
-
-  //   return {
-  //       last30DaysAverage: parseFloat(averageLast30Days).toFixed(1),
-  //       allTimeAverage: parseFloat(averageAllTime).toFixed(1)
-  //   };
-  // }
-
-  // useEffect(() => {
-  //   async function fetchData() {
-  //     try {
-  //       const user = await Auth.currentAuthenticatedUser();
-  //       const userEmail = user.attributes.email;
-  //       //const averages = await fetchAverageWellbeingScoresForYear(userEmail);
-  //       //setMonthlyAverages(averages);
-  //       // const averages30All = await fetchAverageWellbeingScores(userEmail);
-  //       // const last30DaysAverage = averages30All.last30DaysAverage;
-  //       // const allTimeAverage = averages30All.allTimeAverage;
-  //       // setLast30DaysAverage(last30DaysAverage);
-  //       // setAllTimeAverage(allTimeAverage);
-  //     } catch (error) {
-  //       console.error("Error fetching monthly averages:", error);
-  //     }
-  //   }
-  //   fetchData();
-  // }, []);
-
   // Handle when the user navigates to a different month in the calendar
   const handleActiveStartDateChange = ({ activeStartDate }) => {
     setCurrentMonth(activeStartDate);
@@ -798,6 +508,16 @@ function Home() {
       default:
         return ""; // Handle cases outside defined ranges
     }
+  };
+
+  const onOpenFactorDetailsModal = (factor) => {
+    dispatch(
+      getWellBeingFactorOvertime({
+        userId: user.id,
+        factor: factor,
+      }),
+    );
+    setIsOpen(true);
   };
 
   return (
@@ -945,6 +665,9 @@ function Home() {
               helperText={
                 "Workload reflects the manageability of your assigned tasks. It is calculated based on your responses to survey questions about task volume, time sufficiency, and control over your workload. Additionally, it incorporates data from integrations such as the number of tasks assigned, deadlines, and working hours. This factor helps identify if your workload is balanced and appropriate."
               }
+              showDetails={() =>
+                onOpenFactorDetailsModal(factorTableField.Workload)
+              }
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -959,6 +682,9 @@ function Home() {
               helperTitle={"Managerial Support"}
               helperText={
                 "Managerial Support represents the level of assistance and guidance you receive from your manager. It is calculated from your survey responses about your manager’s accessibility, clarity of expectations, and helpfulness of feedback. This factor evaluates how effectively your manager supports you in your role."
+              }
+              showDetails={() =>
+                onOpenFactorDetailsModal(factorTableField.Relationship)
               }
             />
           </Box>
@@ -975,6 +701,9 @@ function Home() {
               helperText={
                 "Time Boundaries measure your ability to maintain a separation between work and personal life. It is calculated using your survey responses regarding disconnecting after work, adherence to scheduled hours, and ability to take breaks. Integration data like emails sent outside of work hours and meeting times also contribute. This factor assesses whether you can maintain a healthy work-life balance."
               }
+              showDetails={() =>
+                onOpenFactorDetailsModal(factorTableField.TimeBoundaries)
+              }
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -989,6 +718,9 @@ function Home() {
               helperTitle={"Autonomy"}
               helperText={
                 "Autonomy measures the degree of freedom and trust you have in your role. It is calculated from your survey responses regarding your freedom to decide how to perform tasks, the trust placed in you to make decisions, and opportunities to choose or prioritize your work. This factor reflects the level of control you have over your work methods and decision-making."
+              }
+              showDetails={() =>
+                onOpenFactorDetailsModal(factorTableField.Autonomy)
               }
             />
           </Box>
@@ -1005,11 +737,34 @@ function Home() {
               helperText={
                 "Communication evaluates the effectiveness of information exchange within your team and with your manager. It is calculated based on your survey responses about the clarity of information received, acknowledgment of your ideas and concerns, and satisfaction with team communication. Integration data such as message frequency and response times may also be considered. This factor assesses how well communication facilitates your work."
               }
+              showDetails={() =>
+                onOpenFactorDetailsModal(factorTableField.Communication)
+              }
             />
           </Box>
         </Flex>
       </Box>
-      {/* <WellbeingReasons /> */}
+      {/* <Wellbeing /> */}
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size={"xl"}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody mt={10}>
+            {wellBeingFactorOvertime && (
+              <ZoomableChart
+                data={wellBeingFactorOvertime.data}
+                factor={"workload"}
+              />
+            )}
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={() => setIsOpen(false)}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }

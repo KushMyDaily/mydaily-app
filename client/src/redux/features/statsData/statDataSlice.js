@@ -19,6 +19,9 @@ const initialState = {
   subordinatesFormsLoading: false,
   subordinatesFormsError: null,
   subordinatesForms: null,
+  wellBeingFactorOvertimeLoading: false,
+  wellBeingFactorOvertimeError: null,
+  wellBeingFactorOvertime: null,
 };
 
 const statDataSlice = createSlice({
@@ -97,6 +100,18 @@ const statDataSlice = createSlice({
       state.subordinatesFormsLoading = false;
       state.subordinatesFormsError = action.payload;
     },
+    wellBeingFactorOvertimeRequest: (state) => {
+      state.wellBeingFactorOvertimeLoading = true;
+      state.wellBeingFactorOvertimeError = null;
+    },
+    wellBeingFactorOvertimeSuccess: (state, action) => {
+      state.wellBeingFactorOvertimeLoading = false;
+      state.wellBeingFactorOvertime = action.payload;
+    },
+    wellBeingFactorOvertimeFailure: (state, action) => {
+      state.wellBeingFactorOvertimeLoading = false;
+      state.wellBeingFactorOvertimeError = action.payload;
+    },
   },
 });
 
@@ -119,6 +134,9 @@ export const {
   getSubordinatesformsRequest,
   getSubordinatesformsSuccess,
   getSubordinatesformsFailure,
+  wellBeingFactorOvertimeRequest,
+  wellBeingFactorOvertimeSuccess,
+  wellBeingFactorOvertimeFailure,
 } = statDataSlice.actions;
 
 export default statDataSlice.reducer;

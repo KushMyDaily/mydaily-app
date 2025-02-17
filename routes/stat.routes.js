@@ -18,6 +18,10 @@ module.exports = function (app) {
     // app.post('/api/stat/details/graph', stat.storeDailyStaticsData)
     // app.post('/api/stat/calendar/graph', stat.storeDailyStaticsData)
     app.post('/api/stat/storedailystatics/graph', stat.storeDailyStaticsData)
+    app.post(
+        '/api/stat/getwellbeingfactorovertime/graph',
+        stat.getWellBeingFactorOvertime
+    )
     //manager view
     app.post('/api/stat/manager/teamforms/graph', stat.getTeamFormData)
     app.post(
