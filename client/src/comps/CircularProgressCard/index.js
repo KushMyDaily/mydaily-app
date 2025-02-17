@@ -25,6 +25,7 @@ const CircularProgressCard = ({
   isHelperText = false,
   helperTitle,
   helperText,
+  showDetails,
 }) => {
   return (
     <Card className={styles.cardWrap}>
@@ -64,6 +65,7 @@ const CircularProgressCard = ({
             thickness={6}
             marginBottom="30px"
             className={styles.circularProgress}
+            onClick={() => showDetails()}
           >
             <CircularProgressLabel
               fontSize={"22px"}

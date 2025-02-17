@@ -81,7 +81,7 @@ module.exports = (slackApp) => {
                                         text: 'Bad',
                                         emoji: true,
                                     },
-                                    value: '0',
+                                    value: '0.5',
                                 },
                             ],
                             action_id: 'q02', //change this when one survey has both questions
@@ -156,7 +156,7 @@ module.exports = (slackApp) => {
                                     text: 'Overwhelmed or Fatigued - Feeling stressed and needing rest or support',
                                     emoji: true,
                                 },
-                                value: '0',
+                                value: '0.5',
                             },
                         ],
                         action_id: 'q01',

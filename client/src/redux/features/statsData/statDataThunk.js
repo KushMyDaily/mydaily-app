@@ -18,6 +18,9 @@ import {
   getSubordinatesformsSuccess,
   getSubordinatesformsFailure,
   getSubordinatesformsRequest,
+  wellBeingFactorOvertimeRequest,
+  wellBeingFactorOvertimeSuccess,
+  wellBeingFactorOvertimeFailure,
 } from "./statDataSlice";
 import { API } from "../../../services/apiBuilder";
 
@@ -101,6 +104,22 @@ export const getSubordinatesforms = createAsyncThunk(
       dispatch(getSubordinatesformsSuccess(response.data));
     } catch (error) {
       dispatch(getSubordinatesformsFailure(error));
+    }
+  },
+);
+
+export const getWellBeingFactorOvertime = createAsyncThunk(
+  `stat/getWellBeingFactorOvertime/graph`,
+  async (data, { dispatch }) => {
+    dispatch(wellBeingFactorOvertimeRequest());
+    try {
+      const response = await API.post(
+        "/api/stat/getwellbeingfactorovertime/graph/",
+        data,
+      );
+      dispatch(wellBeingFactorOvertimeSuccess(response.data));
+    } catch (error) {
+      dispatch(wellBeingFactorOvertimeFailure(error));
     }
   },
 );
