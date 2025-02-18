@@ -216,7 +216,7 @@ function Home() {
   } = useSelector((state) => state.statsData);
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
-  // const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedFactor, setSelectedFactor] = useState(null);
 
   // test restricting the calendar
   const currentDate = new Date();
@@ -518,6 +518,7 @@ function Home() {
       }),
     );
     setIsOpen(true);
+    setSelectedFactor(factor);
   };
 
   return (
@@ -750,11 +751,13 @@ function Home() {
         <ModalContent>
           <ModalCloseButton />
           <ModalBody mt={10}>
-            {wellBeingFactorOvertime && (
+            {wellBeingFactorOvertime && selectedFactor ? (
               <ZoomableChart
                 data={wellBeingFactorOvertime.data}
-                factor={"workload"}
+                factor={selectedFactor}
               />
+            ) : (
+              <Text fontSize={"14px"}>No data</Text>
             )}
           </ModalBody>
 
