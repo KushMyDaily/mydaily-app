@@ -39,11 +39,16 @@ async function checkAndRefreshToken(userId) {
         try {
             const newCredentials = await refreshAccessToken(oauth2Client)
             if (newCredentials && userId) {
+                console.log(
+                    `Updated new google credentials of user: ${userId} `
+                )
+
                 await GoogleController.updateCredentials(newCredentials, userId)
                 return oauth2Client
             }
         } catch (error) {
             console.log('Error refreshing access token', error)
+            console.log(`Google credential fail user: ${userId}`)
             return null
         }
     }
