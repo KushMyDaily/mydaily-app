@@ -1,10 +1,7 @@
 import React from "react";
 import { Flex, Text } from "@chakra-ui/react";
 import styles from "./sidebar.module.css";
-import {
-  BiUser,
-  //BiGlobe
-} from "react-icons/bi";
+import { BiUser, BiGlobe } from "react-icons/bi";
 import { AiOutlineTeam, AiOutlineSetting } from "react-icons/ai";
 //import { HiOutlineMap } from "react-icons/hi";
 import { Link, useLocation } from "react-router-dom";
@@ -43,7 +40,8 @@ function Sidebar() {
               />
             </Link>
           )}
-          {/* {(userRole[0] === "ROLE_GROUP_ADMIN" ||
+          {(userRole[0] === "ROLE_USER" ||
+            userRole[0] === "ROLE_GROUP_ADMIN" ||
             userRole[0] === "ROLE_ORG_ADMIN" ||
             userRole[0] === "ROLE_SUPER_ADMIN") && (
             <Link className={styles.link} to={"/company-view"}>
@@ -52,7 +50,7 @@ function Sidebar() {
                 color={currentUrl === "/company-view" ? "black" : "lightgray"}
               />
             </Link>
-          )} */}
+          )}
           {(userRole[0] === "ROLE_ORG_ADMIN" ||
             userRole[0] === "ROLE_SUPER_ADMIN") && (
             <Link className={styles.link} to={"/teams"}>

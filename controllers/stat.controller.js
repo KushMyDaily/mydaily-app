@@ -1346,6 +1346,190 @@ const getWellBeingFactorOvertimeData = async (userId, factor) => {
     return null
 }
 
+///// Company View
+const getCompanyWellBeingRelatedData = async (req, res) => {
+    const { companyId, date } = req.body
+
+    if (!companyId) {
+        return res.status(401).json({ error: 'company is required' })
+    }
+    if (!date) {
+        return res.status(401).json({ error: 'Date is required' })
+    }
+    const endDate = moment(date).endOf('day').toDate() // Ending on the given date
+    const startDate = moment(date).subtract(365, 'days').startOf('day').toDate() // 365 days back from the given date
+
+    const userIds = await User.findAll({
+        where: {
+            companyId: companyId,
+        },
+        attributes: ['id'],
+        raw: true, // Return raw data instead of Sequelize instances
+    })
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(401).json({ error: 'This company has no users' })
+    }
+
+    const userIdArray = userIds.map((user) => user.id) // Extract user IDs from the result
+
+    try {
+        const dataSet = await StatisticsByDate.findAll({
+            where: {
+                userId: {
+                    [Op.in]: userIdArray, // Use Op.in to filter by multiple user IDs
+                },
+                createdAt: {
+                    [Op.between]: [startDate, endDate],
+                },
+            },
+            order: [['createdAt', 'DESC']], // Order by latest date
+            attributes: [
+                'id',
+                'userId', // Include userId in the attributes
+                'workload',
+                'relationship',
+                'timeBoundaries',
+                'autonomy',
+                'communication',
+                'yourForm',
+                'createdAt',
+            ], // Select only the required fields to optimize
+        })
+
+        if (dataSet.length === 0) {
+            return res
+                .status(404)
+                .json({ error: 'No data found for the given date range' })
+        } else {
+            const companyForm = await findYourFormByDate(dataSet, date)
+            const companyAverage = await getCompanyAverages(dataSet, date)
+            const companyMonthlyForm = await getCompanyMonthlyForm(
+                dataSet,
+                date
+            )
+            const result = {
+                companyForm: companyForm || 0,
+                formLast30Days: companyAverage.formAverageLast30Days || 0,
+                formLast90Days: companyAverage.formAverageLast90Days || 0,
+                formLast365Days: companyAverage.formAverageLast365Days || 0,
+                companyMonthlyForm: companyMonthlyForm || [],
+            }
+            return res.status(200).send({ data: result })
+        }
+    } catch (error) {
+        console.error('Error fetching statistics:', error)
+        return res.status(500).json({ error: 'Internal server error' })
+    }
+}
+
+const findYourFormByDate = async (dataSet, specificDate) => {
+    // Convert specificDate to a date object for comparison
+    const targetDate = new Date(specificDate)
+    // Create a start and end time for the target date
+    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0))
+    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999))
+
+    // Filter the dataset for results that fall on the specific date
+    try {
+        const results = dataSet.filter((item) => {
+            const createdAt = new Date(item.createdAt)
+            return createdAt >= startOfDay && createdAt <= endOfDay
+        })
+        if (results.length > 0) {
+            const allYourForm = results.reduce((acc, item) => {
+                return acc + item.yourForm
+            }, 0)
+            const countRecords = results.length
+            const yourFormAverage = allYourForm / countRecords
+            return yourFormAverage
+        }
+        return 0
+    } catch (error) {
+        console.error('Error finding your form by date:', error)
+        return 0
+    }
+}
+
+const getCompanyAverages = async (data, givenDate) => {
+    const today = moment(givenDate, 'YYYY-MM-DD') // Current date
+    const last30Days = moment(givenDate, 'YYYY-MM-DD').subtract(30, 'days') // 30 days ago
+    const last90Days = moment(givenDate, 'YYYY-MM-DD').subtract(90, 'days') // 90 days ago
+    const last365Days = moment(givenDate, 'YYYY-MM-DD').subtract(365, 'days') // 365 days ago
+
+    const calculateAverage = (filteredData, field) => {
+        if (filteredData.length === 0) return 0
+        const sum = filteredData.reduce((acc, item) => acc + item[field], 0)
+        return (sum / filteredData.length).toFixed(1)
+    }
+
+    const filterDataByDateRange = (data, startDate, endDate) => {
+        return data.filter((item) => {
+            const createdAt = moment(item.createdAt)
+            return createdAt.isBetween(startDate, endDate, null, '[]')
+        })
+    }
+
+    // Filter data for the last 30, 90, and 365 days
+    const filteredData30Days = filterDataByDateRange(data, last30Days, today)
+    const filteredData90Days = filterDataByDateRange(data, last90Days, today)
+    const filteredData365Days = filterDataByDateRange(data, last365Days, today)
+
+    // Calculate the averages
+    const formAverageLast30Days = calculateAverage(
+        filteredData30Days,
+        'yourForm'
+    )
+    const formAverageLast90Days = calculateAverage(
+        filteredData90Days,
+        'yourForm'
+    )
+    const formAverageLast365Days = calculateAverage(
+        filteredData365Days,
+        'yourForm'
+    )
+
+    return {
+        formAverageLast30Days,
+        formAverageLast90Days,
+        formAverageLast365Days,
+    }
+}
+
+const getCompanyMonthlyForm = (data, givenDate) => {
+    // Implement this function to calculate monthly form averages
+    // for the current year based on the given date
+    const startOfYear = moment(givenDate).startOf('year').toDate()
+    const endOfYear = moment(givenDate).endOf('year').toDate()
+
+    const filteredData = data.filter((item) => {
+        const createdAt = moment(item.createdAt)
+        return createdAt.isBetween(startOfYear, endOfYear, null, '[]')
+    })
+
+    const monthlyData = Array.from({ length: 12 }, (_, i) => ({
+        month: moment().month(i).format('MMMM'),
+        totalYourForm: 0,
+        countRecords: 0,
+    }))
+
+    filteredData.forEach((item) => {
+        const monthIndex = moment(item.createdAt).month()
+        monthlyData[monthIndex].totalYourForm += item.yourForm
+        monthlyData[monthIndex].countRecords += 1
+    })
+
+    const monthlyAverages = monthlyData.map((month) => ({
+        month: month.month,
+        averageCompanyForm:
+            month.countRecords > 0
+                ? (month.totalYourForm / month.countRecords).toFixed(1)
+                : 0,
+    }))
+
+    return monthlyAverages
+}
+
 ///// Testing functions
 const testStatWellBeingScore = async (req, res) => {
     const { userId, date } = req.body
@@ -1408,5 +1592,6 @@ module.exports = {
     getTeamFormData: getTeamFormData,
     getSubordinatesFormData: getSubordinatesFormData,
     getWellBeingFactorOvertime: getWellBeingFactorOvertime,
+    getCompanyWellBeingRelatedData: getCompanyWellBeingRelatedData,
     testStatWellBeingScore: testStatWellBeingScore,
 }
