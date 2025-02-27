@@ -413,6 +413,7 @@ function Teams() {
                     statusText="Increase since last week"
                     color={defineColor(managerData.teamForm || 0)}
                     bgColor={defineBGColor(managerData.teamForm || 0)}
+                    isClickable={false}
                   />
                 </Box>
                 <Box className={styles.chartColInner}>

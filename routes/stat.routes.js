@@ -28,6 +28,11 @@ module.exports = function (app) {
         '/api/stat/manager/subordinatesforms/graph',
         stat.getSubordinatesFormData
     )
+    //compnay view
+    app.post(
+        '/api/stat/company/companyforms/graph',
+        stat.getCompanyWellBeingRelatedData
+    )
     //test api
     app.post('/api/stat/test/wellbeingscore', stat.testStatWellBeingScore)
 }

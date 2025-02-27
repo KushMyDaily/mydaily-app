@@ -541,6 +541,7 @@ function Home() {
                 statusText="Increase since last week"
                 color={defineColor(wellBeingScore)}
                 bgColor={defineBGColor(wellBeingScore)}
+                isClickable={false}
               />
             </Box>
             <Box className={styles.chartColInner}>
@@ -669,6 +670,7 @@ function Home() {
               showDetails={() =>
                 onOpenFactorDetailsModal(factorTableField.Workload)
               }
+              isClickable={true}
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -687,6 +689,7 @@ function Home() {
               showDetails={() =>
                 onOpenFactorDetailsModal(factorTableField.Relationship)
               }
+              isClickable={true}
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -705,6 +708,7 @@ function Home() {
               showDetails={() =>
                 onOpenFactorDetailsModal(factorTableField.TimeBoundaries)
               }
+              isClickable={true}
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -723,6 +727,7 @@ function Home() {
               showDetails={() =>
                 onOpenFactorDetailsModal(factorTableField.Autonomy)
               }
+              isClickable={true}
             />
           </Box>
           <Box className={styles.factorCol}>
@@ -741,6 +746,7 @@ function Home() {
               showDetails={() =>
                 onOpenFactorDetailsModal(factorTableField.Communication)
               }
+              isClickable={true}
             />
           </Box>
         </Flex>
