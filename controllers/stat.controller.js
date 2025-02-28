@@ -1441,7 +1441,7 @@ const findYourFormByDate = async (dataSet, specificDate) => {
                 return acc + item.yourForm
             }, 0)
             const countRecords = results.length
-            const yourFormAverage = allYourForm / countRecords
+            const yourFormAverage = (allYourForm / countRecords).toFixed(1)
             return yourFormAverage
         }
         return 0
