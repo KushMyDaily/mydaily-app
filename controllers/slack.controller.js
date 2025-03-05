@@ -387,3 +387,43 @@ exports.InitializeSlackOauth = async (installation) => {
         throw new Error('>> Already exist oAuth:')
     }
 }
+
+exports.deleteDailySurveyPostings = async () => {
+    try {
+        const workspaceUsers = await WorkspaceUser.findAll({
+            where: {
+                postedTimestamp: {
+                    [Op.ne]: null,
+                },
+            },
+        })
+
+        if (workspaceUsers) {
+            workspaceUsers.forEach(async (workspaceUser) => {
+                try {
+                    let token
+                    await slackService
+                        .authorize(workspaceUser?.teamId)
+                        .then((res) => {
+                            token = res.botToken
+                        })
+                        .catch((err) => {
+                            throw new Error('Failed authorize token', err)
+                        })
+                    await webClient.chat.delete({
+                        token: token,
+                        channel: workspaceUser.channelId,
+                        ts: workspaceUser.postedTimestamp,
+                    })
+                } catch (error) {
+                    console.error(
+                        `>> Error deleting message workspace user: ${workspaceUser.id}`,
+                        error
+                    )
+                }
+            })
+        }
+    } catch (error) {
+        console.log('>> Error while deleting daily survey postings:', error)
+    }
+}

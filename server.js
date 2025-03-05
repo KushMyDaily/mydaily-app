@@ -5,7 +5,10 @@ const dotenv = require('dotenv')
 dotenv.config()
 
 const { slackApp, installer } = require('./connectors/slack')
-const { runSurvey } = require('./controllers/slack.controller')
+const {
+    runSurvey,
+    deleteDailySurveyPostings,
+} = require('./controllers/slack.controller')
 const { storeDailyWorkloadStats } = require('./controllers/workload.controller')
 const {
     storeReleationshipsStats,
@@ -212,6 +215,14 @@ if (process.env.APP_ENV === 'production') {
 
         // Call the controller method directly
         storeDailyStaticsData()
+    })
+
+    // Schedule the cron job to delete unfillled survey postings
+    cron.schedule('0 15 10 * * 1-5', () => {
+        console.log('Delete survey postings cron job running...')
+
+        // Call the controller method directly
+        deleteDailySurveyPostings()
     })
 }
 
