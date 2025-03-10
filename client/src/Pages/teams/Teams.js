@@ -215,6 +215,7 @@ function Teams() {
             id: subordinate.id,
             name: subordinate.userName,
             form: subordinate.form,
+            srr: subordinate.srr,
           }),
         );
         setOrganizationData(organizationData);
@@ -379,8 +380,8 @@ function Teams() {
             id: sub.id,
             name: sub.userName,
             form: sub.form,
+            srr: sub.srr,
           }));
-          console.log(updatedChildren);
           return {
             ...child,
             children: updatedChildren, // Add subordinates to children
@@ -550,6 +551,7 @@ function Teams() {
                     data={organizationData}
                     onHandleExapand={onHandleExpand}
                     teamForm={managerData.teamForm}
+                    totalSrr={managerData.totalSrr}
                   />
                 </TransformComponent>
               </TransformWrapper>

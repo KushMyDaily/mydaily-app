@@ -926,6 +926,9 @@ async function getTeamFormData(req, res) {
         // This section use to fetch second layer subordinates form
         const sub = await getAllsubordinatesFormData(subordinates, date)
 
+        const overallSurveyResponseRate =
+            await getOverallSurveyResponseRate(sub)
+
         // This section use to fetch first layer subordinates form and stats
         const data = await fetchAllRanges(subordinates, date)
         if (data) {
@@ -943,6 +946,7 @@ async function getTeamFormData(req, res) {
                 allTime: 0,
                 perMonth: [],
                 subordinatesForm: sub,
+                totalSrr: overallSurveyResponseRate,
             }
 
             if (data.existing) {
@@ -1101,6 +1105,16 @@ const getSubordinates = async (userId) => {
     }
 }
 
+const getOverallSurveyResponseRate = async (sub) => {
+    const totalSurveyResponseRate = sub.reduce((acc, current) => {
+        return acc + Number(current.srr)
+    }, 0)
+
+    const averageSurveyResponseRate =
+        sub.length > 0 ? totalSurveyResponseRate / sub.length : 0
+    return averageSurveyResponseRate
+}
+
 /**
  * Fetch statistics based on time range.
  * @param {Array<number>} subordinatesIds - Array of subordinate user IDs.
@@ -1226,6 +1240,44 @@ const fetchSubordinatesForm = async (subordinatesIds, date) => {
     return results
 }
 
+const getSurveyResponseRate = async (userId, date) => {
+    const last5WorkingDays = getLastWeekdays(date, 5)
+    const surveyResponseRate = []
+
+    for (const day of last5WorkingDays) {
+        const surveyData = await SurveyAnswer.findOne({
+            where: {
+                userId: userId,
+                createdAt: {
+                    [Op.between]: [`${day} 00:00:00`, `${day} 23:59:59`],
+                },
+            },
+            raw: true,
+        })
+        if (surveyData) {
+            surveyResponseRate.push(surveyData)
+        }
+    }
+    const surveyResponseRatePercentage = ((surveyResponseRate.length / 5) * 100) // Calculate the percentage of survey response rate
+        .toFixed(2)
+
+    return Number(surveyResponseRatePercentage)
+}
+
+function getLastWeekdays(referenceDate, daysCount) {
+    const lastWeekdays = []
+    let refDate = moment(referenceDate, 'YYYY-MM-DD').clone()
+
+    while (lastWeekdays.length < daysCount) {
+        if (refDate.isoWeekday() !== 6 && refDate.isoWeekday() !== 7) {
+            lastWeekdays.push(refDate.format('YYYY-MM-DD'))
+        }
+        refDate.subtract(1, 'days')
+    }
+
+    return lastWeekdays
+}
+
 /*
 ========== Get subordinates form data ====================
 */
@@ -1280,6 +1332,12 @@ const getAllsubordinatesFormData = async (subordinates, date) => {
                     }
                 }
 
+                //Fetch subordinates survey response rate
+                const surveyResponseRate = await getSurveyResponseRate(
+                    subordinate,
+                    date
+                )
+
                 // Fetch user name once
                 const userName = await getUserName(subordinate)
 
@@ -1288,6 +1346,7 @@ const getAllsubordinatesFormData = async (subordinates, date) => {
                     id: subordinate,
                     userName,
                     form,
+                    srr: surveyResponseRate || 0,
                 })
             } catch (error) {
                 console.error(
@@ -1301,6 +1360,7 @@ const getAllsubordinatesFormData = async (subordinates, date) => {
                     id: subordinate,
                     userName,
                     form: null,
+                    srr: 0,
                 })
             }
         })
