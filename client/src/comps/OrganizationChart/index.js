@@ -41,6 +41,9 @@ const renderNode = (node, onHandleExapand) => {
       <Card variant="outline" width={"120px"}>
         <CardBody data-type="CardBody">
           <Stat>
+            <Tag size="sm" colorScheme="gray" borderRadius="full">
+              <TagLabel>SRR: {node.srr}%</TagLabel>
+            </Tag>
             <StatLabel>{node.name}</StatLabel>
             {node.form && node.form !== null ? (
               <StatNumber color={defineColor(node.form)}>
@@ -65,18 +68,17 @@ const renderNode = (node, onHandleExapand) => {
   );
 };
 
-const renderRoot = (name, teamForm) => {
+const renderRoot = (name, teamForm, totalSrr) => {
   return (
     <Flex justify="center">
-      <Card
-        //data-type="Card"
-        //overflow="hidden"
-        variant="outline"
-        //bg="blackAlpha.900"
-        width={"200px"}
-      >
+      <Card variant="outline" width={"200px"}>
         <CardBody data-type="CardBody">
           <Stat>
+            <Flex justify="flex-end" mb={3}>
+              <Tag size="sm" colorScheme="gray" borderRadius="full">
+                <TagLabel>SRR: {totalSrr}%</TagLabel>
+              </Tag>
+            </Flex>
             <StatLabel>Manager</StatLabel>
             <Tag size="lg" colorScheme="red" borderRadius="full">
               <Avatar
@@ -106,13 +108,13 @@ const renderTree = (node, onHandleExapand) => {
 };
 
 // Main Component
-const OrganizationChart = ({ data, teamForm, onHandleExapand }) => {
+const OrganizationChart = ({ data, teamForm, totalSrr, onHandleExapand }) => {
   return (
     <Tree
       lineWidth="2px"
       lineColor="green"
       lineBorderRadius="10px"
-      label={renderRoot(data.name, teamForm)}
+      label={renderRoot(data.name, teamForm, totalSrr)}
     >
       {data.children &&
         data.children.map((child) => renderTree(child, onHandleExapand))}
