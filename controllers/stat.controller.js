@@ -937,7 +937,7 @@ async function getTeamFormData(req, res) {
                 stressFactors: {
                     workload: 0,
                     relationship: 0,
-                    timeBoundries: 0,
+                    timeBoundaries: 0,
                     autonomy: 0,
                     communication: 0,
                 },
@@ -973,7 +973,7 @@ async function getTeamFormData(req, res) {
                               data.existing.countRecords
                           ).toFixed(1)
                         : 0
-                managerData.stressFactors.timeBoundries =
+                managerData.stressFactors.timeBoundaries =
                     data.existing.totalTimeBoundaries /
                         data.existing.countRecords >
                     0
@@ -1406,6 +1406,31 @@ const getWellBeingFactorOvertimeData = async (userId, factor) => {
     return null
 }
 
+const getTeamWellbeingFactorOvertime = async (req, res) => {
+    const { userId, factor } = req.body
+
+    if (!userId) {
+        return res.status(401).json({ error: 'User is required' })
+    }
+    if (!factor) {
+        return res.status(401).json({ error: 'Factor is required' })
+    }
+    try {
+        const subordinates = await getSubordinates(userId)
+        if (subordinates.length > 0) {
+            const result = await getWellBeingFactorOvertimeData(
+                subordinates,
+                factor
+            )
+            return res.status(200).json({ data: result })
+        }
+
+        return res.status(401).json({ error: 'No subordinates found' })
+    } catch (error) {
+        return res.status(401).json({ error: error })
+    }
+}
+
 ///// Company View
 const getCompanyWellBeingRelatedData = async (req, res) => {
     const { companyId, date } = req.body
@@ -1651,6 +1676,7 @@ module.exports = {
     getcalenderData: getcalenderData,
     getTeamFormData: getTeamFormData,
     getSubordinatesFormData: getSubordinatesFormData,
+    getTeamWellbeingFactorOvertime: getTeamWellbeingFactorOvertime,
     getWellBeingFactorOvertime: getWellBeingFactorOvertime,
     getCompanyWellBeingRelatedData: getCompanyWellBeingRelatedData,
     testStatWellBeingScore: testStatWellBeingScore,

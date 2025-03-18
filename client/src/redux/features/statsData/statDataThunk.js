@@ -24,6 +24,9 @@ import {
   getCompanyWellBeingDataRequest,
   getCompanyWellBeingDataSuccess,
   getCompanyWellBeingDataFailure,
+  managerWellBeingFactorOvertimeRequest,
+  managerWellBeingFactorOvertimeSuccess,
+  managerWellBeingFactorOvertimeFailure,
 } from "./statDataSlice";
 import { API } from "../../../services/apiBuilder";
 
@@ -123,6 +126,22 @@ export const getWellBeingFactorOvertime = createAsyncThunk(
       dispatch(wellBeingFactorOvertimeSuccess(response.data));
     } catch (error) {
       dispatch(wellBeingFactorOvertimeFailure(error));
+    }
+  },
+);
+
+export const getManagerWellBeingFactorOvertime = createAsyncThunk(
+  `stat/getManagerWellBeingFactorOvertime/graph`,
+  async (data, { dispatch }) => {
+    dispatch(managerWellBeingFactorOvertimeRequest());
+    try {
+      const response = await API.post(
+        "/api/stat/manager/getwellbeingfactorovertime/graph/",
+        data,
+      );
+      dispatch(managerWellBeingFactorOvertimeSuccess(response.data));
+    } catch (error) {
+      dispatch(managerWellBeingFactorOvertimeFailure(error));
     }
   },
 );

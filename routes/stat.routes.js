@@ -28,6 +28,10 @@ module.exports = function (app) {
         '/api/stat/manager/subordinatesforms/graph',
         stat.getSubordinatesFormData
     )
+    app.post(
+        '/api/stat/manager/getwellbeingfactorovertime/graph',
+        stat.getTeamWellbeingFactorOvertime
+    )
     //compnay view
     app.post(
         '/api/stat/company/companyforms/graph',

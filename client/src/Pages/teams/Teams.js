@@ -9,12 +9,15 @@ import {
   Text,
   ButtonGroup,
   IconButton,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Button,
 } from "@chakra-ui/react";
-import React, {
-  useState,
-  useEffect,
-  //useCallback
-} from "react";
+import React, { useState, useEffect } from "react";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -28,19 +31,15 @@ import Color from "../../utils/Color";
 import Chart from "react-apexcharts";
 import Legends from "../../comps/Legends";
 import CircularProgressCard from "../../comps/CircularProgressCard";
-//import TeamCard from "../../comps/TeamCard";
-import ProgressCard from "../../comps/ProgressCard";
 import ProgressBar from "../../comps/ProgressBar";
 import styles from "./teams.module.css";
 import {
   managerViewStat,
   getSubordinatesforms,
+  getManagerWellBeingFactorOvertime,
 } from "../../redux/features/statsData/statDataThunk";
-import goodIcon from "../../assets/img/check.png";
-import hourGlass from "../../assets/img/hourglass.png";
-import needAttentionError from "../../assets/img/danger.png";
-import coutionError from "../../assets/img/yellow-error.png";
 import { LuZoomIn, LuZoomOut, LuRefreshCw } from "react-icons/lu";
+import ZoomableChart from "../../comps/Charts/ZoomableChart/ZoomableChart";
 
 const OPTIONS = {
   chart: {
@@ -161,15 +160,18 @@ function Teams() {
     name: user.username,
     children: [],
   });
+  const [isOpen, setIsOpen] = useState(false);
   const {
     //managerViewError,
     manager,
     subordinatesForms,
+    managerWellBeingFactorOvertime,
   } = useSelector((state) => state.statsData);
 
   const dispatch = useDispatch();
 
   const [stressFactors, setStressFactors] = useState([]);
+  const [selectedFactor, setSelectedFactor] = useState(null);
 
   useEffect(() => {
     dispatch(
@@ -200,9 +202,12 @@ function Teams() {
         Object.entries(manager.stressFactors).forEach(([key, value]) => {
           const stressFactor = {
             heading: getHeadingByKey(key),
+            percentage: value,
             increase: true,
             statusText: "Increase since last month",
-            imageUrl: getImageByValue(value),
+            isHelperText: false,
+            isClickable: true,
+            factor: key,
           };
           mappedStressFactors.push(stressFactor);
         });
@@ -318,25 +323,10 @@ function Teams() {
         return "Communication";
       case "relationship":
         return "Relationships";
-      case "timeBoundries":
+      case "timeBoundaries":
         return "Time Boundaries";
       default:
         return "";
-    }
-  };
-
-  const getImageByValue = (value) => {
-    switch (true) {
-      case value >= 7.5:
-        return goodIcon;
-      case value >= 5.5 && value < 7.5:
-        return coutionError;
-      case value > 0 && value < 5.5:
-        return needAttentionError;
-      case value === 0:
-        return hourGlass;
-      default:
-        return ""; // Handle cases outside defined ranges
     }
   };
 
@@ -391,6 +381,17 @@ function Teams() {
       return { ...child, children: [] }; // Ensure non-matching nodes also have a children key
     });
   }
+
+  const onOpenFactorDetailsModal = (factor) => {
+    dispatch(
+      getManagerWellBeingFactorOvertime({
+        userId: user.id,
+        factor: factor,
+      }),
+    );
+    setIsOpen(true);
+    setSelectedFactor(factor);
+  };
 
   return (
     <Box>
@@ -499,11 +500,16 @@ function Teams() {
           <Flex className={styles.cardRow}>
             {stressFactors.map((item) => (
               <Box key={item.heading} className={styles.cardCol}>
-                <ProgressCard
+                <CircularProgressCard
                   heading={item.heading}
+                  percentage={item.percentage}
                   increase={item.increase}
                   statusText={item.statusText}
-                  imageUrl={item.imageUrl}
+                  color={defineColor(item.percentage)}
+                  bgColor={defineBGColor(item.percentage)}
+                  isHelperText={item.isHelperText}
+                  showDetails={() => onOpenFactorDetailsModal(item.factor)}
+                  isClickable={item.isClickable}
                 />
               </Box>
             ))}
@@ -564,6 +570,29 @@ function Teams() {
           No subordinate data is available for the selected manager.
         </Alert>
       )}
+
+      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} size={"xl"}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody mt={10}>
+            {managerWellBeingFactorOvertime && selectedFactor ? (
+              <ZoomableChart
+                data={managerWellBeingFactorOvertime.data}
+                factor={selectedFactor}
+              />
+            ) : (
+              <Text fontSize={"14px"}>No data</Text>
+            )}
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={() => setIsOpen(false)}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }
