@@ -25,6 +25,9 @@ const initialState = {
   companyWellBeingDataLoading: false,
   companyWellBeingDataError: null,
   companyWellBeingData: null,
+  managerWellBeingFactorOvertimeLoading: false,
+  managerWellBeingFactorOvertimeError: null,
+  managerWellBeingFactorOvertime: null,
 };
 
 const statDataSlice = createSlice({
@@ -127,6 +130,18 @@ const statDataSlice = createSlice({
       state.companyWellBeingDataLoading = false;
       state.companyWellBeingDataError = action.payload;
     },
+    managerWellBeingFactorOvertimeRequest: (state) => {
+      state.managerWellBeingFactorOvertimeLoading = true;
+      state.managerWellBeingFactorOvertimeError = null;
+    },
+    managerWellBeingFactorOvertimeSuccess: (state, action) => {
+      state.managerWellBeingFactorOvertimeLoading = false;
+      state.managerWellBeingFactorOvertime = action.payload;
+    },
+    managerWellBeingFactorOvertimeFailure: (state, action) => {
+      state.managerWellBeingFactorOvertimeLoading = false;
+      state.managerWellBeingFactorOvertimeError = action.payload;
+    },
   },
 });
 
@@ -155,6 +170,9 @@ export const {
   getCompanyWellBeingDataRequest,
   getCompanyWellBeingDataSuccess,
   getCompanyWellBeingDataFailure,
+  managerWellBeingFactorOvertimeRequest,
+  managerWellBeingFactorOvertimeSuccess,
+  managerWellBeingFactorOvertimeFailure,
 } = statDataSlice.actions;
 
 export default statDataSlice.reducer;
