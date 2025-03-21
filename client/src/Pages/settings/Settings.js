@@ -1,7 +1,4 @@
 import {
-  Alert,
-  AlertIcon,
-  AlertDescription,
   Avatar,
   Box,
   Card,
@@ -594,18 +591,22 @@ function Settings() {
                 switch (socialAuth && socialAuth.hasSlack) {
                   case SlackStatus.AUTHORIZED:
                     return (
-                      <Alert
-                        status="success"
-                        variant="subtle"
-                        width={"60%"}
+                      <Button
+                        className={styles.slackBtn}
+                        colorScheme="white"
+                        variant="solid"
+                        mt={5}
                         mb={5}
+                        w={"60%"}
+                        p={"0 15px"}
+                        justifyContent={"flex-start"}
+                        leftIcon={
+                          <Image src={slackLogo} style={{ width: "25px" }} />
+                        }
+                        isDisabled
                       >
-                        <AlertIcon />
-                        <Image src={slackLogo} style={{ width: "25px" }} />
-                        <AlertDescription p={2}>
-                          Slack connected
-                        </AlertDescription>
-                      </Alert>
+                        Slack Connected
+                      </Button>
                     );
                   case SlackStatus.REAUTHORIZED:
                   case SlackStatus.UNDEFINED:
@@ -638,30 +639,22 @@ function Settings() {
                 }
               })()}
 
-              {socialAuth && socialAuth.hasGoogle ? (
-                <Alert status="success" variant="subtle" width={"60%"} mb={5}>
-                  <AlertIcon />
-                  <Image src={googleLogo} style={{ width: "25px" }} />
-                  <AlertDescription p={2}>Google connected</AlertDescription>
-                </Alert>
-              ) : (
-                <Button
-                  className={styles.googleBtn}
-                  colorScheme="white"
-                  variant="solid"
-                  mt={5}
-                  w={"60%"}
-                  p={"0 15px"}
-                  justifyContent={"flex-start"}
-                  leftIcon={
-                    <Image src={googleLogo} style={{ width: "25px" }} />
-                  }
-                  onClick={getCode}
-                  isDisabled={socialAuth && socialAuth.hasGoogle}
-                >
-                  Connect
-                </Button>
-              )}
+              <Button
+                className={styles.googleBtn}
+                colorScheme="white"
+                variant="solid"
+                mt={5}
+                w={"60%"}
+                p={"0 15px"}
+                justifyContent={"flex-start"}
+                leftIcon={<Image src={googleLogo} style={{ width: "25px" }} />}
+                onClick={getCode}
+                isDisabled={socialAuth && socialAuth.hasGoogle}
+              >
+                {socialAuth && socialAuth.hasGoogle
+                  ? "Google Connected"
+                  : "Connect"}
+              </Button>
 
               <Button
                 className={styles.reachBtn}

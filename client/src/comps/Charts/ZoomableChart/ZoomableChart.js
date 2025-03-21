@@ -2,6 +2,23 @@ import ReactApexChart from "react-apexcharts";
 import { format } from "date-fns";
 
 const ZoomableChart = ({ data, factor }) => {
+  const getHeadingByKey = (key) => {
+    switch (key) {
+      case "workload":
+        return "Workload";
+      case "autonomy":
+        return "Autonomy";
+      case "communication":
+        return "Communication";
+      case "relationship":
+        return "Relationships";
+      case "timeBoundaries":
+        return "Time Boundaries";
+      default:
+        return "";
+    }
+  };
+
   const formattedData = data.map((item) => ({
     x: new Date(item.createdAt),
     y: item[factor],
@@ -9,7 +26,6 @@ const ZoomableChart = ({ data, factor }) => {
 
   const options = {
     chart: {
-      //type: "line",
       type: "area",
       stacked: false,
       height: 350,
@@ -19,13 +35,15 @@ const ZoomableChart = ({ data, factor }) => {
         autoScaleYaxis: true,
       },
       toolbar: {
+        tools: {
+          pan: false, // Disables the hand icon (pan tool)
+        },
         autoSelected: "zoom",
       },
     },
     xaxis: {
       type: "datetime",
       labels: {
-        // MM/dd/yyyy
         formatter: (value) => format(new Date(value), "MM/dd"),
       },
     },
@@ -36,7 +54,7 @@ const ZoomableChart = ({ data, factor }) => {
       curve: "straight",
     },
     title: {
-      text: "WellBeing Factor",
+      text: getHeadingByKey(factor),
       align: "left",
     },
   };
