@@ -549,7 +549,13 @@ function Teams() {
                   limitToBounds: true, // Keeps the chart within bounds
                 }}
               >
-                <Controls />
+                <Flex alignItems="center" width="100%">
+                  <Controls />
+                  <Text as="sub" ml="auto">
+                    SRR = Survey Response Rate
+                  </Text>
+                </Flex>
+
                 <TransformComponent
                   wrapperStyle={{ width: "100%", height: "100%" }}
                 >
