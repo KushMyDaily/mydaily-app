@@ -83,23 +83,25 @@ const CircularProgressCard = ({
               {percentage}
             </CircularProgressLabel>
           </CircularProgress>
-          <Flex alignItems={"flex-start"}>
-            {increase ? (
-              <FiArrowUpRight fontSize={24} />
-            ) : (
-              <FiArrowDownRight fontSize={24} />
-            )}
-            <Text
-              fontSize={"14px"}
-              line-height={5}
-              fontWeight={"400"}
-              paddingTop={0.5}
-              paddingLeft={2}
-              textAlign={"left"}
-            >
-              {statusText}
-            </Text>
-          </Flex>
+          {statusText && (
+            <Flex alignItems={"flex-start"}>
+              {increase ? (
+                <FiArrowUpRight fontSize={24} />
+              ) : (
+                <FiArrowDownRight fontSize={24} />
+              )}
+              <Text
+                fontSize={"14px"}
+                line-height={5}
+                fontWeight={"400"}
+                paddingTop={0.5}
+                paddingLeft={2}
+                textAlign={"left"}
+              >
+                {statusText}
+              </Text>
+            </Flex>
+          )}
         </Box>
       </CardBody>
     </Card>

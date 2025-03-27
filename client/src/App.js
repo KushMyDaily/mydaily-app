@@ -15,6 +15,7 @@ import SignUp from "./Pages/signUp/signup";
 import GoogleAuthRedirect from "./Pages/googleRedirect/GoogleRedirect";
 import FogotPassword from "./Pages/fogotPassword/fogotPassword";
 import ResetPassword from "./Pages/resetPassword/resetPassword";
+import SuperAdminView from "./Pages/superAdminView/SuperAdminView";
 
 function App() {
   return (
@@ -52,6 +53,10 @@ function App() {
             <Route
               path="/settings"
               element={<PrivateRoute Component={Settings} />}
+            />
+            <Route
+              path="/super-admin-view"
+              element={<PrivateRoute Component={SuperAdminView} />}
             />
           </Route>
         </Routes>
