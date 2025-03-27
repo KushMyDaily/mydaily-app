@@ -1,0 +1,47 @@
+.chartRow {
+  flex-wrap: wrap;
+  margin: 0 -15px 25px;
+  padding-top: 20px;
+}
+
+.chartCol {
+  padding: 0 15px;
+  width: 50%;
+}
+
+.chartColInner {
+  padding-top: 35px;
+  width: 100%;
+}
+
+.DetailCard {
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: unset !important;
+  height: 100%;
+}
+
+.CompanyCard {
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: unset !important;
+  height: 100%;
+}
+
+.flexRow {
+  flex-wrap: wrap;
+  margin: 0 -20px -23px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.flexCol {
+  padding: 0 20px 23px;
+  width: 25%;
+}
+
+.chartCol {
+  padding: 0 15px;
+  width: 50%;
+}

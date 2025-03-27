@@ -160,6 +160,7 @@ require('./routes/auth.routes')(app)
 require('./routes/user.routes')(app)
 require('./routes/google.routes')(app)
 require('./routes/stat.routes')(app)
+require('./routes/superUser.routes')(app)
 
 app.get('/api/users', (req, res) => {
     runSurvey()

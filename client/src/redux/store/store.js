@@ -6,6 +6,7 @@ import signinReducer from "../features/signin/signinSlice";
 import userReducer from "../features/user/userSlice";
 import googleReducer from "../features/google/googleSlice";
 import statsDataReducer from "../features/statsData/statDataSlice";
+import superUserReducer from "../features/superUser/superUserSlice";
 
 const persistConfig = {
   key: "mydaily",
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
   user: userReducer,
   google: googleReducer,
   statsData: statsDataReducer,
+  superUser: superUserReducer,
 });
 
 const persistAuthReducer = persistReducer(persistConfig, rootReducer);

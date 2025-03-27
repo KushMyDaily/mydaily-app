@@ -2,7 +2,11 @@ import React from "react";
 import { Flex, Text } from "@chakra-ui/react";
 import styles from "./sidebar.module.css";
 import { BiUser, BiGlobe } from "react-icons/bi";
-import { AiOutlineTeam, AiOutlineSetting } from "react-icons/ai";
+import {
+  AiOutlineTeam,
+  AiOutlineSetting,
+  AiOutlineBarChart,
+} from "react-icons/ai";
 //import { HiOutlineMap } from "react-icons/hi";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -57,6 +61,16 @@ function Sidebar() {
               <AiOutlineTeam
                 size={24}
                 color={currentUrl === "/teams" ? "black" : "lightgray"}
+              />
+            </Link>
+          )}
+          {userRole[0] === "ROLE_SUPER_ADMIN" && (
+            <Link className={styles.link} to={"/super-admin-view"}>
+              <AiOutlineBarChart
+                size={24}
+                color={
+                  currentUrl === "/super-admin-view" ? "black" : "lightgray"
+                }
               />
             </Link>
           )}
