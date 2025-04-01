@@ -21,7 +21,10 @@ import {
   Avatar,
   AvatarBadge,
   Badge,
+  CardHeader,
 } from "@chakra-ui/react";
+import Legends from "../../comps/Legends";
+import Chart from "react-apexcharts";
 import PageHeader from "../../comps/PageHeader";
 import styles from "./superAdminView.module.css";
 import Color from "../../utils/Color";
@@ -34,12 +37,111 @@ import {
 } from "../../redux/features/superUser/superUserThunk";
 import { MdStar } from "react-icons/md";
 
+const OPTIONS = {
+  chart: {
+    toolbar: {
+      show: false,
+    },
+  },
+  xaxis: {
+    categories: [],
+    // show: false,
+    labels: {
+      color: "rbga(0,0,0,0.4)",
+    },
+    axisBorder: {
+      show: false,
+    },
+    axisTicks: {
+      show: false,
+    },
+  },
+  yaxis: {
+    show: true,
+    color: "black",
+    decimalsInFloat: 0,
+    labels: {
+      show: true,
+      style: {
+        colors: "#A3AED0",
+        fontSize: "18px",
+        fontWeight: "500",
+      },
+    },
+    min: 0,
+    max: 100,
+  },
+  grid: {
+    show: false,
+  },
+  colors: [
+    function ({ value }) {
+      if (value >= 90 && value <= 100) {
+        return Color.Amazing;
+      }
+      if (value >= 75 && value < 90) {
+        return Color.Great;
+      }
+      if (value >= 60 && value < 75) {
+        return Color.Good;
+      }
+      if (value >= 40 && value < 60) {
+        return Color.Alright;
+      }
+      if (value >= 20 && value < 40) {
+        return Color.Low;
+      }
+      if (value >= 0 && value < 20) {
+        return Color.Exhausted;
+      } else {
+        return "#000000";
+      }
+    },
+  ],
+  legend: {
+    show: false,
+  },
+  dataLabels: {
+    enabled: false,
+  },
+
+  plotOptions: {
+    bar: {
+      columnWidth: "25%",
+      borderRadius: 5,
+      distributed: true,
+    },
+  },
+  responsive: [
+    {
+      breakpoint: 1280,
+      options: {
+        chart: {
+          width: "100%",
+          height: 280,
+        },
+      },
+    },
+    {
+      breakpoint: 451,
+      options: {
+        chart: {
+          width: "100%",
+          height: 180,
+        },
+      },
+    },
+  ],
+};
+
 const SuperAdminView = () => {
   const dispatch = useDispatch();
   const { companyData, companyDetails, surveyResponse } = useSelector(
     (state) => state.superUser,
   );
   const [selectedCompanyId, setSelectedCompanyId] = useState("");
+  const [chartOptions, setChartOptions] = useState(OPTIONS);
+  const [chartSeriesData, setChartSeriesData] = useState([]);
   const handleCompanyChange = (event) => {
     setSelectedCompanyId(event.target.value);
   };
@@ -57,11 +159,31 @@ const SuperAdminView = () => {
       dispatch(
         getSurveyresponse({
           companyId: selectedCompanyId,
-          date: moment().format("YYYY-MM-DD"),
+          date: moment().subtract(1, "days").format("YYYY-MM-DD"),
         }),
       );
     }
   }, [selectedCompanyId]);
+
+  useEffect(() => {
+    if (surveyResponse && surveyResponse.lastWeekSRR) {
+      const days = surveyResponse.lastWeekSRR.map((entry) => entry.day);
+      const srr = surveyResponse.lastWeekSRR.map((entry) => entry.srr);
+
+      const chartSeriesData = srr.length > 0 ? [{ data: srr }] : [];
+      if (days.length > 0) {
+        setChartOptions((prevOptions) => ({
+          ...prevOptions,
+          xaxis: {
+            ...prevOptions.xaxis,
+            categories: days,
+          },
+        }));
+      }
+
+      setChartSeriesData(chartSeriesData);
+    }
+  }, [surveyResponse]);
 
   const defineColor = (score) => {
     switch (true) {
@@ -196,6 +318,47 @@ const SuperAdminView = () => {
         <Box mt={5}>
           <Flex gap={5}>
             <Box w="75%">
+              {surveyResponse && (
+                <Card boxShadow={"none"}>
+                  <CardHeader>
+                    <Text fontSize="22px" fontWeight="500" lineHeight="30px">
+                      Last Week SRR
+                    </Text>
+                  </CardHeader>
+                  <CardBody padding={"25px 15px 25px"}>
+                    <Legends />
+                    <Box className="ChartBox">
+                      <Chart
+                        options={chartOptions}
+                        series={chartSeriesData}
+                        type="bar"
+                        width="100%"
+                      />
+                    </Box>
+                  </CardBody>
+                </Card>
+              )}
+            </Box>
+            <Box w="25%" h={"230px"}>
+              {surveyResponse && (
+                <CircularProgressCard
+                  heading="Last day SRR"
+                  percentage={surveyResponse?.lastDaySRR || 0}
+                  isHelperText
+                  helperTitle={"SRR"}
+                  helperText={
+                    "This reflects the users' survey response rate for today."
+                  }
+                  color={defineColor(surveyResponse?.lastDaySRR || 0)}
+                  bgColor={defineBGColor(surveyResponse?.lastDaySRR || 0)}
+                />
+              )}
+            </Box>
+          </Flex>
+        </Box>
+        <Box mt={5}>
+          <Flex gap={5}>
+            <Box w="75%">
               {companyDetails && (
                 <Card boxShadow={"none"}>
                   <CardBody p={5}>
@@ -232,21 +395,7 @@ const SuperAdminView = () => {
                 </Card>
               )}
             </Box>
-            <Box w="25%">
-              {surveyResponse && (
-                <CircularProgressCard
-                  heading="Survey Response Rate"
-                  percentage={surveyResponse?.responseRate || 0}
-                  isHelperText
-                  helperTitle={"SRR"}
-                  helperText={
-                    "This reflects the users' survey response rate for today."
-                  }
-                  color={defineColor(surveyResponse?.responseRate || 0)}
-                  bgColor={defineBGColor(surveyResponse?.responseRate || 0)}
-                />
-              )}
-            </Box>
+            <Box w="25%" />
           </Flex>
         </Box>
       </Box>
