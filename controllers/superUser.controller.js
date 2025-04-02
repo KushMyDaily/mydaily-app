@@ -91,7 +91,11 @@ function getLastWeekdays(referenceDate, daysCount) {
 
 async function getCompanyList(req, res) {
     try {
-        const companies = await Company.findAll()
+        const companies = await Company.findAll({
+            where: {
+                status: 1,
+            },
+        })
         res.status(200).json(companies)
     } catch (error) {
         console.error('Error fetching company list:', error)
