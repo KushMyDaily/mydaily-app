@@ -333,6 +333,7 @@ const SuperAdminView = () => {
                         series={chartSeriesData}
                         type="bar"
                         width="100%"
+                        height="500px"
                       />
                     </Box>
                   </CardBody>
