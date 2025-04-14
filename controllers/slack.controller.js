@@ -410,11 +410,7 @@ exports.deleteDailySurveyPostings = async () => {
                         .catch((err) => {
                             throw new Error('Failed authorize token', err)
                         })
-                    await webClient.chat.delete({
-                        token: token,
-                        channel: workspaceUser.channelId,
-                        ts: workspaceUser.postedTimestamp,
-                    })
+                    await deleteAllMessages(workspaceUser.channelId, token)
                 } catch (error) {
                     console.error(
                         `>> Error deleting message workspace user: ${workspaceUser.id}`,
@@ -425,5 +421,49 @@ exports.deleteDailySurveyPostings = async () => {
         }
     } catch (error) {
         console.log('>> Error while deleting daily survey postings:', error)
+    }
+}
+
+async function deleteAllMessages(channelId, token) {
+    try {
+        let hasMore = true
+        let cursor
+
+        while (hasMore) {
+            const result = await webClient.conversations.history({
+                token: token,
+                channel: channelId,
+                limit: 200,
+                cursor: cursor,
+            })
+
+            const messages = result.messages || []
+
+            for (const msg of messages) {
+                // Only delete messages posted by the bot
+
+                if (msg.bot_id) {
+                    try {
+                        await webClient.chat.delete({
+                            channel: channelId,
+                            ts: msg.ts,
+                        })
+                        console.info(`Deleted message: ${msg.ts}`)
+                    } catch (err) {
+                        console.error(
+                            `Failed to delete message ${msg.ts}:`,
+                            err?.data?.error || err.message
+                        )
+                    }
+                }
+            }
+
+            hasMore = result.has_more
+            cursor = result.response_metadata?.next_cursor
+        }
+
+        console.log('Done deleting messages.')
+    } catch (err) {
+        console.error('Error fetching messages:', err)
     }
 }
