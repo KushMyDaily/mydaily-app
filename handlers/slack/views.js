@@ -1,7 +1,7 @@
 const db = require('../../models')
 const { WebClient } = require('@slack/web-api')
-const SlackService = require('../../service/slack.service')
 const { Op, Sequelize } = require('sequelize')
+const tokenService = require('../../service/slackToken.service')
 
 const {
     user: User,
@@ -9,7 +9,6 @@ const {
     workspaceUser: WorkspaceUser,
 } = db
 const webClient = new WebClient()
-const slackService = new SlackService()
 
 module.exports = (slackApp) => {
     slackApp.view('view_1', async ({ body, ack, payload }) => {
@@ -71,15 +70,9 @@ module.exports = (slackApp) => {
         }
 
         try {
-            let token
-            await slackService
-                .authorize(workspaceUser?.teamId)
-                .then((res) => {
-                    token = res.botToken
-                })
-                .catch((err) => {
-                    throw new Error('Failed authorize token', err)
-                })
+            const token = await tokenService.getValidToken(
+                workspaceUser?.teamId
+            )
             await webClient.chat.update({
                 token: token,
                 channel: workspaceUser?.channelId,

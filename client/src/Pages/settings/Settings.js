@@ -624,8 +624,7 @@ function Settings() {
                           <Image src={slackLogo} style={{ width: "25px" }} />
                         }
                         onClick={() =>
-                          (location.href =
-                            "https://slack.com/oauth/v2/authorize?client_id=4578727160275.4581313497012&scope=channels:history,channels:read,chat:write,commands,conversations.connect:manage,conversations.connect:read,conversations.connect:write,groups:history,groups:read,im:history,users:read,users:read.email,channels:write.invites,groups:write.invites,mpim:write.invites,channels:manage,groups:write,im:write,mpim:write&user_scope=channels:write,channels:write.invites")
+                          (location.href = `${process.env.REACT_APP_SLACK_DISRIBUTION_URL}`)
                         }
                         isDisabled={!checkAuth(userDetails)}
                       >
