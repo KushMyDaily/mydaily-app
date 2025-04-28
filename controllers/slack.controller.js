@@ -9,6 +9,8 @@ const {
     user: User,
 } = db
 
+const tokenService = require('../service/slackToken.service') // Import tokenService
+
 const { Op, Sequelize } = db.Sequelize
 
 const slackService = new SlackService()
@@ -20,19 +22,7 @@ exports.runSurvey = async () => {
 
         if (slackOauth) {
             slackOauth.forEach(async (oauth) => {
-                let token
-                await slackService
-                    .authorize(oauth.teamId)
-                    .then((res) => {
-                        if (oauth.tokenType === 'bot') {
-                            token = res.botToken
-                        } else if (oauth.tokenType === 'user') {
-                            token = res.userToken
-                        }
-                    })
-                    .catch((err) => {
-                        throw new Error('Failed authorize token', err)
-                    })
+                const token = await tokenService.getValidToken(oauth.teamId)
 
                 if (oauth) {
                     const filtedWorkspaceUsers = await Promise.all(
@@ -138,31 +128,30 @@ exports.runSurvey = async () => {
                                         'Token expired, refreshing token...'
                                     )
 
-                                    // Refresh the token
-                                    const authResult =
-                                        await slackService.authorize(
-                                            oauth.teamId
+                                    try {
+                                        const token =
+                                            await tokenService.getValidToken(
+                                                oauth.teamId
+                                            )
+                                        postedResponse =
+                                            await postMessage(token)
+                                        // // Update the token in the database if necessary
+                                        await SlackOAuthAccess.update(
+                                            {
+                                                [oauth.tokenType === 'bot'
+                                                    ? 'botToken'
+                                                    : 'userToken']: token,
+                                            },
+                                            {
+                                                where: { teamId: oauth.teamId },
+                                            }
                                         )
-                                    const refreshedToken =
-                                        oauth.tokenType === 'bot'
-                                            ? authResult.botToken
-                                            : authResult.userToken
-
-                                    // Retry posting the message with the refreshed token
-                                    postedResponse =
-                                        await postMessage(refreshedToken)
-
-                                    // Update the token in the database if necessary
-                                    await SlackOAuthAccess.update(
-                                        {
-                                            [oauth.tokenType === 'bot'
-                                                ? 'botToken'
-                                                : 'userToken']: refreshedToken,
-                                        },
-                                        {
-                                            where: { teamId: oauth.teamId },
-                                        }
-                                    )
+                                    } catch (error) {
+                                        console.error(
+                                            'Failed to refresh token or post message after refresh:',
+                                            error
+                                        )
+                                    }
                                 } else if (
                                     error.data &&
                                     error.data?.error ===
@@ -177,6 +166,7 @@ exports.runSurvey = async () => {
                                             [`${oauth.tokenType}RefreshToken`]:
                                                 null,
                                             [`${oauth.tokenType}Token`]: null,
+                                            needsReauthorization: true,
                                         },
                                         { where: { teamId: oauth.teamId } }
                                     )
@@ -189,8 +179,8 @@ exports.runSurvey = async () => {
                                         'App needs reauthorization due to invalid refresh token.'
                                     )
                                 } else if (
-                                    error.data &&
-                                    error.data.error === 'invalid_auth'
+                                    error.data?.error === 'invalid_auth' ||
+                                    error.data?.error === 'token_revoked'
                                 ) {
                                     console.error(
                                         `Invalid auth error for teamId: ${oauth.teamId}`

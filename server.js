@@ -21,6 +21,11 @@ const {
     storeCommunicationStats,
 } = require('./controllers/communications.controller')
 const { storeDailyStaticsData } = require('./controllers/stat.controller')
+const { monthlyNotification } = require('./controllers/user.controller')
+const SlackService = require('./service/slack.service')
+const tokenService = require('./service/slackToken.service')
+
+const slackService = new SlackService()
 
 const app = express()
 
@@ -142,6 +147,39 @@ const callbackOptions = {
 app.get('/api/slack/oauth_redirect', async (req, res) => {
     await installer.handleCallback(req, res, callbackOptions)
 })
+// slack testing
+app.post('/api/slack/post-message', async (req, res) => {
+    const { token, channelId, text } = req.body
+    try {
+        await slackService.sendMessage(token, channelId, text)
+        res.status(200).send('Message sent successfully')
+    } catch (error) {
+        console.error('Error sending message:', error)
+        res.status(500).send('Failed to send message')
+    }
+})
+app.post('/api/slack/getValidToken', async (req, res) => {
+    const { teamId } = req.body
+    try {
+        const token = await tokenService.getValidToken(teamId)
+        if (!token) {
+            return res.status(401).send('No valid token found')
+        }
+        return res.status(200).send(token)
+    } catch (error) {
+        console.error('Error getting valid token:', error)
+        res.status(500).send('Failed to get valid token')
+    }
+})
+app.get('/api/slack/checkAndRefreshExpiringTokens', async (req, res) => {
+    try {
+        await tokenService.checkAndRefreshExpiringTokens()
+        return res.status(200).send('Token check and refresh initiated')
+    } catch (error) {
+        console.error('Error checking and refreshing tokens:', error)
+        res.status(500).send('Failed to check and refresh tokens')
+    }
+})
 
 // Middleware
 const loggingMiddleware = require('./middleware/logging')
@@ -224,6 +262,20 @@ if (process.env.APP_ENV === 'production') {
 
         // Call the controller method directly
         deleteDailySurveyPostings()
+    })
+
+    // Run every hour
+    cron.schedule('0 * * * *', async () => {
+        console.log('Running scheduled token refresh check')
+        await tokenService.checkAndRefreshExpiringTokens()
+    })
+
+    // Shedule email sending every 1st of the month
+    cron.schedule('0 0 1 * *', () => {
+        console.log('Monthly notification cron job running...')
+
+        // Call the controller method directly
+        monthlyNotification()
     })
 }
 

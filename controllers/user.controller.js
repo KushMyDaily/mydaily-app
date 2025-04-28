@@ -1,6 +1,10 @@
 const db = require('../models')
 const nodemailer = require('nodemailer')
+const fs = require('fs')
+const { promisify } = require('util')
+
 const { workspaceUser: WorkspaceUser, googleAuth: GoogleAuth, user: User } = db
+const readFileAsync = promisify(fs.readFile)
 
 const slackStatus = Object.freeze({
     AUTHORIZED: 'AUTHORIZED',
@@ -241,5 +245,39 @@ exports.sendConcern = async (req, res) => {
         } else {
             return res.status(401).json({ error: 'User not found' })
         }
+    }
+}
+
+exports.monthlyNotification = async () => {
+    // Read the HTML template and image file
+    const htmlTemplate = await readFileAsync(
+        'emailTemplates/monthlyNotification.html',
+        'utf-8'
+    )
+
+    const users = await User.findAll({})
+    if (users) {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.APP_MANAGE_EMAIL,
+                pass: process.env.APP_MANAGE_PASSWORD,
+            },
+        })
+        const mailOptions = {
+            from: process.env.APP_MANAGE_EMAIL,
+            to: users.email,
+            subject: `Monthly Notification`,
+            html: htmlTemplate,
+        }
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log(error)
+            } else {
+                console.log(`Email sent: ${info.response}`)
+            }
+        })
+    } else {
+        console.log('User not found')
     }
 }

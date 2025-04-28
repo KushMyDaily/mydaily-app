@@ -27,6 +27,7 @@ module.exports = function (app) {
         controller.getProfile
     )
     app.post('/api/sendconcern/', [authJwt.verifyToken], controller.sendConcern)
+    app.get('/api/monthlyNotification', controller.monthlyNotification)
 
     // app.get(
     //   "/api/test/user",

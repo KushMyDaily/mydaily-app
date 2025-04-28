@@ -49,6 +49,9 @@ exports.findAll = () => {
                 },
             },
         ],
+        where: {
+            needsReauthorization: false,
+        },
     })
         .then((oAuth) => {
             return oAuth

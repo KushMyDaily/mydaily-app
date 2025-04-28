@@ -168,6 +168,18 @@ class SlackService {
             return result
         }
     }
+    async sendMessage(token, channelId, message) {
+        const webClient = new WebClient(token)
+
+        if (webClient) {
+            // Call the chat.postMessage method using the WebClient
+            const result = await webClient.chat.postMessage({
+                channel: channelId,
+                text: message,
+            })
+            return result
+        }
+    }
 }
 
 /**
