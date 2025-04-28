@@ -13,13 +13,6 @@ const slackStatus = Object.freeze({
     UNDEFINED: 'UNDEFINED',
 })
 
-const slackStatus = Object.freeze({
-    AUTHORIZED: 'AUTHORIZED',
-    UNAUTHORIZED: 'UNAUTHORIZED',
-    REAUTHORIZED: 'REAUTHORIZED',
-    UNDEFINED: 'UNDEFINED',
-})
-
 exports.allAccess = (req, res) => {
     res.status(200).send('Public Content.')
 }
