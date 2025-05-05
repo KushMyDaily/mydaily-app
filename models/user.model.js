@@ -20,6 +20,8 @@ module.exports = (sequelize, DataTypes) => {
         birthday: DataTypes.DATE,
         gender: DataTypes.STRING,
         position: DataTypes.STRING,
+        inactive: DataTypes.BOOLEAN,
+        unsubscribe: DataTypes.BOOLEAN,
     })
 
     User.associate = function (models) {
