@@ -43,6 +43,7 @@ const checkCompanyExisted = (req, res, next) => {
         COMPANY.findOne({
             where: {
                 domain: domain[1],
+                status: 1,
             },
         }).then((company) => {
             if (!company) {
