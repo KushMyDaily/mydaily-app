@@ -388,26 +388,22 @@ exports.deleteDailySurveyPostings = async () => {
             },
         })
 
-        if (workspaceUsers) {
-            workspaceUsers.forEach(async (workspaceUser) => {
-                try {
-                    let token
-                    await slackService
-                        .authorize(workspaceUser?.teamId)
-                        .then((res) => {
-                            token = res.botToken
-                        })
-                        .catch((err) => {
-                            throw new Error('Failed authorize token', err)
-                        })
-                    await deleteAllMessages(workspaceUser.channelId, token)
-                } catch (error) {
-                    console.error(
-                        `>> Error deleting message workspace user: ${workspaceUser.id}`,
-                        error
-                    )
-                }
-            })
+        if (workspaceUsers && workspaceUsers.length > 0) {
+            await Promise.all(
+                workspaceUsers.map(async (workspaceUser) => {
+                    try {
+                        const token = await tokenService.getValidToken(
+                            workspaceUser?.teamId
+                        )
+                        await deleteAllMessages(workspaceUser.channelId, token)
+                    } catch (error) {
+                        console.error(
+                            `>> Error deleting messages for workspace user: ${workspaceUser.id}`,
+                            error
+                        )
+                    }
+                })
+            )
         }
     } catch (error) {
         console.log('>> Error while deleting daily survey postings:', error)

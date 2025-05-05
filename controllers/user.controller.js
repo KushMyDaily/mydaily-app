@@ -255,29 +255,95 @@ exports.monthlyNotification = async () => {
         'utf-8'
     )
 
-    const users = await User.findAll({})
-    if (users) {
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.APP_MANAGE_EMAIL,
-                pass: process.env.APP_MANAGE_PASSWORD,
-            },
-        })
-        const mailOptions = {
-            from: process.env.APP_MANAGE_EMAIL,
-            to: users.email,
-            subject: `Monthly Notification`,
-            html: htmlTemplate,
-        }
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error)
-            } else {
-                console.log(`Email sent: ${info.response}`)
+    const users = await User.findAll({
+        where: {
+            unsubscribe: false,
+        },
+    })
+
+    if (users && users.length > 0) {
+        users.forEach((user) => {
+            const unsubscribeUrl = `${process.env.APP_ENV === 'production' ? process.env.URL_LOCAL : process.env.URL_LOCAL_API}/api/unsubscribeEmail?email=${user.email}`
+            const updatedHtmlTemplate = htmlTemplate.replace(
+                /{{UNSUB_URL}}/g,
+                unsubscribeUrl
+            )
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: process.env.APP_MAIL_SEND_EMAIL,
+                    pass: process.env.APP_MAIL_SEND_PASSWORD,
+                },
+            })
+            const mailOptions = {
+                from: process.env.APP_MAIL_SEND_EMAIL,
+                to: user.email,
+                subject: `Monthly Notification`,
+                html: updatedHtmlTemplate,
+                headers: {
+                    'List-Unsubscribe': `<${unsubscribeUrl}>`,
+                },
             }
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.log(error)
+                } else {
+                    console.log(`Email sent: ${info.response}`)
+                }
+            })
         })
     } else {
         console.log('User not found')
+    }
+}
+
+exports.unsubscribeEmail = async (req, res) => {
+    const email = req.query.email
+
+    const unsubscribeSuccess = await readFileAsync(
+        'pages/unsubscribeSuccess.html',
+        'utf-8'
+    )
+    const unsubscribeFail = await readFileAsync(
+        'pages/unsubscribeFail.html',
+        'utf-8'
+    )
+
+    if (!email) {
+        return res.status(401).json({ error: 'Email is required' })
+    }
+
+    if (email) {
+        await User.findOne({
+            where: { email: email, unsubscribe: false },
+        })
+            .then(async (user) => {
+                if (user) {
+                    await User.update(
+                        { unsubscribe: true },
+                        { where: { email: email } }
+                    )
+                    res.writeHead(200, {
+                        'Content-Type': 'text/html; charset=utf-8',
+                    })
+                    res.end(unsubscribeSuccess)
+                } else {
+                    res.writeHead(401, {
+                        'Content-Type': 'text/html; charset=utf-8',
+                    })
+                    res.end(unsubscribeFail)
+                }
+            })
+            .catch((error) => {
+                res.writeHead(401, {
+                    'Content-Type': 'text/html; charset=utf-8',
+                })
+                res.end(unsubscribeFail)
+            })
+    } else {
+        res.writeHead(401, {
+            'Content-Type': 'text/html; charset=utf-8',
+        })
+        res.end(unsubscribeFail)
     }
 }

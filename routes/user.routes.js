@@ -28,6 +28,7 @@ module.exports = function (app) {
     )
     app.post('/api/sendconcern/', [authJwt.verifyToken], controller.sendConcern)
     app.get('/api/monthlyNotification', controller.monthlyNotification)
+    app.get('/api/unsubscribeEmail/', controller.unsubscribeEmail)
 
     // app.get(
     //   "/api/test/user",
