@@ -431,6 +431,7 @@ async function deleteAllMessages(channelId, token) {
                 if (msg.bot_id) {
                     try {
                         await webClient.chat.delete({
+                            token: token,
                             channel: channelId,
                             ts: msg.ts,
                         })
