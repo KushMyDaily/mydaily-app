@@ -8,6 +8,7 @@ const { slackApp, installer } = require('./connectors/slack')
 const {
     runSurvey,
     deleteDailySurveyPostings,
+    resyncSlackOuthNotification,
 } = require('./controllers/slack.controller')
 const { storeDailyWorkloadStats } = require('./controllers/workload.controller')
 const {
@@ -202,6 +203,7 @@ require('./routes/superUser.routes')(app)
 
 app.get('/api/users', (req, res) => {
     runSurvey()
+    resyncSlackOuthNotification()
     return res.json('user')
 })
 app.get('/api/calculations', (req, res) => {
@@ -257,11 +259,13 @@ if (process.env.APP_ENV === 'production') {
     })
 
     // Schedule the cron job to delete unfillled survey postings
-    cron.schedule('0 15 10 * * 1-5', () => {
+    cron.schedule('0 15 10 * * 1-5', async () => {
         console.log('Delete survey postings cron job running...')
-
         // Call the controller method directly
-        deleteDailySurveyPostings()
+        await deleteDailySurveyPostings()
+
+        console.log('Slack resync cron job running...')
+        await resyncSlackOuthNotification()
     })
 
     // Run every hour

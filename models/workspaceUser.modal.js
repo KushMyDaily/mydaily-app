@@ -17,13 +17,5 @@ module.exports = (sequelize, DataTypes) => {
         postedTimestamp: DataTypes.STRING,
         channelId: DataTypes.STRING,
     })
-
-    // WorkspaceUser.associate = function (models) {
-    //     WorkspaceUser.belongsToMany(models.slackOAuthAccess, {
-    //         through: 'oAuth_workspaces',
-    //         foreignKey: 'workspaceId',
-    //         otherKey: 'slackOAuthId',
-    //     })
-    // }
     return WorkspaceUser
 }
