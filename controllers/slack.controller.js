@@ -3,11 +3,16 @@ const { WebClient } = require('@slack/web-api')
 const SlackOAuthController = require('./slackOAuth.controller')
 const WorkspaceUserController = require('./workspaceUser.controller')
 const SlackService = require('../service/slack.service')
+const nodemailer = require('nodemailer')
+const fs = require('fs')
+const { promisify } = require('util')
 const {
     slackOAuthAccess: SlackOAuthAccess,
     workspaceUser: WorkspaceUser,
     user: User,
 } = db
+
+const readFileAsync = promisify(fs.readFile)
 
 const tokenService = require('../service/slackToken.service') // Import tokenService
 
@@ -453,4 +458,70 @@ async function deleteAllMessages(channelId, token) {
     } catch (err) {
         console.error('Error fetching messages:', err)
     }
+}
+
+exports.resyncSlackOuthNotification = async (res) => {
+    // Read the HTML template and image file
+    const htmlTemplate = await readFileAsync(
+        'emailTemplates/resyncNotification.html',
+        'utf-8'
+    )
+
+    await SlackOAuthAccess.findAll({
+        where: {
+            needsReauthorization: true,
+        },
+    })
+        .then(async (result) => {
+            if (result.length > 0) {
+                result.forEach(async (oauth) => {
+                    const getSlackAdmin = await WorkspaceUser.findAll({
+                        where: {
+                            teamId: oauth.teamId,
+                            isAdmin: true,
+                        },
+                    })
+
+                    await getSlackAdmin.forEach(async (admin) => {
+                        const unsubscribeUrl = `${process.env.APP_ENV === 'production' ? process.env.URL_LOCAL : process.env.URL_LOCAL_API}/api/unsubscribeEmail?email=${admin.email}`
+                        const updatedHtmlTemplate = htmlTemplate.replace(
+                            /{{UNSUB_URL}}/g,
+                            unsubscribeUrl
+                        )
+                        const transporter = nodemailer.createTransport({
+                            service: 'gmail',
+                            auth: {
+                                user: process.env.APP_MAIL_SEND_EMAIL,
+                                pass: process.env.APP_MAIL_SEND_PASSWORD,
+                            },
+                        })
+                        const mailOptions = {
+                            from: process.env.APP_MAIL_SEND_EMAIL,
+                            to: admin.email,
+                            subject: 'Please resync your Slack authentication',
+                            html: updatedHtmlTemplate,
+                            headers: {
+                                'List-Unsubscribe': `<${unsubscribeUrl}>`,
+                            },
+                        }
+                        transporter.sendMail(mailOptions, (error, info) => {
+                            if (error) {
+                                console.log(error)
+                                return res.status(500).send({
+                                    message: 'Error sending slack reauth email',
+                                })
+                            } else {
+                                console.log(`Email sent: ${info.response}`)
+                                return res.status(200).send({
+                                    data: `Sent slack resync email to ${admin.email}`,
+                                })
+                            }
+                        })
+                    })
+                })
+            }
+        })
+        .catch((err) => {
+            console.log('>> Error while resyncing Slack OAuth:', err)
+        })
 }
