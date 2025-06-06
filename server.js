@@ -203,7 +203,6 @@ require('./routes/superUser.routes')(app)
 
 app.get('/api/users', (req, res) => {
     runSurvey()
-    resyncSlackOuthNotification()
     return res.json('user')
 })
 app.get('/api/calculations', (req, res) => {

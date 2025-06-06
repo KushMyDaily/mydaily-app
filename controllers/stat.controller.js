@@ -179,7 +179,7 @@ async function getcalenderData(req, res) {
                     new Date(acc[currentDate].createdAt)
             ) {
                 acc[currentDate] = {
-                    wellbeingScore: current.wellbeingScore, // Store wellbeingScore value
+                    yourForm: current.yourForm, // Store yourForm value
                     createdAt: moment(current?.createdAt).format('YYYY-MM-DD'), // Store createdAt value
                 }
             }
@@ -202,7 +202,7 @@ const getYearlyData = async (userId, yearStartDate, yearEndDate) => {
                 [Op.between]: [yearStartDate, yearEndDate], // Use the startDate and endDate you generate
             },
         },
-        attributes: ['wellbeingScore', 'createdAt'],
+        attributes: ['yourForm', 'createdAt'],
         order: [['createdAt', 'DESC']], // Order by createdAt descending
     })
 
@@ -340,28 +340,84 @@ const findResultsByDate = async (dataSet, specificDate) => {
 async function storeDailyStaticsData() {
     const todayDate = moment().format('YYYY-MM-DD')
     const users = await User.findAll()
+    const last7thday = getLastWeekdays(todayDate, 7)[6]
 
     if (users) {
         users.forEach(async (user) => {
-            const stressFactorScore = await getStatStressFactorsScore(
-                user.id,
-                todayDate
-            )
-            const todayWellBeingScore = await getStatWellBeingScore(
-                user.id,
-                todayDate
-            )
-            const yourForm = await getYourForm(
-                user.id,
-                todayDate,
-                todayWellBeingScore
+            // find latest 7 survey answer from today for the user
+            const latestSurveyAnswers = await SurveyAnswer.findAll({
+                where: {
+                    userId: user.id,
+                    // Add a valid createdAt condition or remove it if not needed
+                    // Example: fetch last 7 days' answers
+                    createdAt: {
+                        [Op.gt]: `${last7thday} 00:00:00`, // Start of the day
+                        [Op.lte]: `${todayDate} 23:59:59`, // End of the day
+                    },
+                },
+                order: [['createdAt', 'DESC']],
+                limit: 7,
+            })
+            // Get the 0th index of the latest survey answers and create new array
+            const last7daysScoreArray = latestSurveyAnswers.map((answer) => {
+                // Parse the answers string to an array if it's a string
+                let answersArr = answer.answers
+                if (typeof answersArr === 'string') {
+                    try {
+                        answersArr = JSON.parse(answersArr)
+                    } catch (e) {
+                        answersArr = []
+                    }
+                }
+                return answersArr[0] || 0 // Assuming we want the first element
+            })
+            // Calculate the average of the latest 7 survey answers
+            // [(D0 × 7) + (D1 × 6) + (D2 × 5) + (D3 × 4) + (D4 × 3) + (D5 × 2) + (D6 × 1)] / 28
+            const yourForm =
+                last7daysScoreArray.reduce(
+                    (sum, score, index) =>
+                        sum +
+                        parseFloat(score || 0) *
+                            (last7daysScoreArray.length - index),
+                    0
+                ) / 28
+            ///////
+
+            // filter the last 2 survey answers for the user acoording to stressfactor surveyid and build object using
+            // 1st index. {workload: {10, 8}, relationship: {5,8}}
+            // brakeout stressfactors and get average = (10 + 8) /2
+            const stressFactorScore = {}
+            await Promise.all(
+                factors.map(async (factor) => {
+                    const surveyScore = await surveyScoreCalculate(
+                        user.id,
+                        getSurveyIds(factor),
+                        todayDate,
+                        1 //Answer Type [answer 1, answer 2] use index number [0,1]
+                    )
+                    stressFactorScore[factor] = surveyScore
+                })
             )
 
-            if (stressFactorScore && todayWellBeingScore) {
+            // const stressFactorScore = await getStatStressFactorsScore(
+            //     user.id,
+            //     todayDate
+            // )
+            // const todayWellBeingScore = await getStatWellBeingScore(
+            //     user.id,
+            //     todayDate
+            // )
+            // const yourForm = await getYourForm(
+            //     user.id,
+            //     todayDate,
+            //     todayWellBeingScore
+            // )
+
+            if (stressFactorScore && yourForm) {
                 console.log('userID', user.id)
                 console.log('stressFactorScore', stressFactorScore)
-                console.log('wellBeingScore', todayWellBeingScore)
-                console.log('yourForm', yourForm)
+                console.log('wellBeingScore', 0)
+                console.log('yourForm', yourForm.toFixed(1))
                 try {
                     await StatisticsByDate.create({
                         workload: stressFactorScore['WORKLOAD'],
@@ -369,7 +425,7 @@ async function storeDailyStaticsData() {
                         timeBoundaries: stressFactorScore['TIMEBOUNDARY'],
                         autonomy: stressFactorScore['AUTONOMY'],
                         communication: stressFactorScore['COMMUNICATION'],
-                        wellbeingScore: todayWellBeingScore,
+                        wellbeingScore: 0,
                         yourForm: yourForm,
                         userId: user.id,
                     })
