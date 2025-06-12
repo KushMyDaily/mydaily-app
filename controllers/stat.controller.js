@@ -426,7 +426,7 @@ async function storeDailyStaticsData() {
                         autonomy: stressFactorScore['AUTONOMY'],
                         communication: stressFactorScore['COMMUNICATION'],
                         wellbeingScore: 0,
-                        yourForm: yourForm,
+                        yourForm: yourForm.toFixed(1),
                         userId: user.id,
                     })
                 } catch (error) {
