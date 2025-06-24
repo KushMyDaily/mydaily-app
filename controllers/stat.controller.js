@@ -340,7 +340,6 @@ const findResultsByDate = async (dataSet, specificDate) => {
 async function storeDailyStaticsData() {
     const todayDate = moment().format('YYYY-MM-DD')
     const users = await User.findAll()
-    const last7thday = getLastWeekdays(todayDate, 7)[6]
 
     if (users) {
         users.forEach(async (user) => {
@@ -348,12 +347,6 @@ async function storeDailyStaticsData() {
             const latestSurveyAnswers = await SurveyAnswer.findAll({
                 where: {
                     userId: user.id,
-                    // Add a valid createdAt condition or remove it if not needed
-                    // Example: fetch last 7 days' answers
-                    createdAt: {
-                        [Op.gt]: `${last7thday} 00:00:00`, // Start of the day
-                        [Op.lte]: `${todayDate} 23:59:59`, // End of the day
-                    },
                 },
                 order: [['createdAt', 'DESC']],
                 limit: 7,
@@ -419,16 +412,16 @@ async function storeDailyStaticsData() {
                 console.log('wellBeingScore', 0)
                 console.log('yourForm', yourForm.toFixed(1))
                 try {
-                    await StatisticsByDate.create({
-                        workload: stressFactorScore['WORKLOAD'],
-                        relationship: stressFactorScore['RELATIONSHIP'],
-                        timeBoundaries: stressFactorScore['TIMEBOUNDARY'],
-                        autonomy: stressFactorScore['AUTONOMY'],
-                        communication: stressFactorScore['COMMUNICATION'],
-                        wellbeingScore: 0,
-                        yourForm: yourForm.toFixed(1),
-                        userId: user.id,
-                    })
+                    // await StatisticsByDate.create({
+                    //     workload: stressFactorScore['WORKLOAD'],
+                    //     relationship: stressFactorScore['RELATIONSHIP'],
+                    //     timeBoundaries: stressFactorScore['TIMEBOUNDARY'],
+                    //     autonomy: stressFactorScore['AUTONOMY'],
+                    //     communication: stressFactorScore['COMMUNICATION'],
+                    //     wellbeingScore: 0,
+                    //     yourForm: yourForm.toFixed(1),
+                    //     userId: user.id,
+                    // })
                 } catch (error) {
                     console.log(error)
                     return error
