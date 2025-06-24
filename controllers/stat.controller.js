@@ -385,7 +385,7 @@ async function storeDailyStaticsData() {
                     const surveyScore = await surveyScoreCalculate(
                         user.id,
                         getSurveyIds(factor),
-                        todayDate,
+                        //todayDate,
                         1 //Answer Type [answer 1, answer 2] use index number [0,1]
                     )
                     stressFactorScore[factor] = surveyScore
@@ -412,16 +412,16 @@ async function storeDailyStaticsData() {
                 console.log('wellBeingScore', 0)
                 console.log('yourForm', yourForm.toFixed(1))
                 try {
-                    // await StatisticsByDate.create({
-                    //     workload: stressFactorScore['WORKLOAD'],
-                    //     relationship: stressFactorScore['RELATIONSHIP'],
-                    //     timeBoundaries: stressFactorScore['TIMEBOUNDARY'],
-                    //     autonomy: stressFactorScore['AUTONOMY'],
-                    //     communication: stressFactorScore['COMMUNICATION'],
-                    //     wellbeingScore: 0,
-                    //     yourForm: yourForm.toFixed(1),
-                    //     userId: user.id,
-                    // })
+                    await StatisticsByDate.create({
+                        workload: stressFactorScore['WORKLOAD'],
+                        relationship: stressFactorScore['RELATIONSHIP'],
+                        timeBoundaries: stressFactorScore['TIMEBOUNDARY'],
+                        autonomy: stressFactorScore['AUTONOMY'],
+                        communication: stressFactorScore['COMMUNICATION'],
+                        wellbeingScore: 0,
+                        yourForm: yourForm.toFixed(1),
+                        userId: user.id,
+                    })
                 } catch (error) {
                     console.log(error)
                     return error
@@ -697,7 +697,7 @@ const getStat = async (userId, stressFactor, date) => {
         const surveyScore = await surveyScoreCalculate(
             userId,
             getSurveyIds(stressFactor),
-            date,
+            //date,
             1 //Answer Type [answer 1, answer 2] use index number [0,1]
         )
         console.log(`integrationScore ${stressFactor}`, integrationScore)
@@ -890,24 +890,24 @@ const integrationScoreCalculate = async (userId, stressFactor, date) => {
     }
 }
 
-const surveyScoreCalculate = async (userId, surveyIds, date, answerType) => {
+const surveyScoreCalculate = async (userId, surveyIds, answerType) => {
     if (!userId) {
         throw new Error('User ID is required')
     }
-    if (!date) {
-        throw new Error('Date is required')
-    }
+    // if (!date) {
+    //     throw new Error('Date is required')
+    // }
 
     if (!Array.isArray(surveyIds) || surveyIds.length === 0) {
         throw new Error('Survey IDs must be a non-empty array')
     }
 
-    // Parse the given date
-    const givenDate = new Date(date)
+    // // Parse the given date
+    // const givenDate = new Date(date)
 
-    // Calculate the date range for the last 30 days
-    const startDate = new Date(givenDate)
-    startDate.setDate(givenDate.getDate() - 30)
+    // // Calculate the date range for the last 30 days
+    // const startDate = new Date(givenDate)
+    // startDate.setDate(givenDate.getDate() - 30)
 
     try {
         const entries = await SurveyAnswer.findAll({
@@ -915,10 +915,6 @@ const surveyScoreCalculate = async (userId, surveyIds, date, answerType) => {
                 userId: userId,
                 surveyId: {
                     [Op.in]: surveyIds, // Filter by survey IDs
-                },
-                createdAt: {
-                    [Op.gte]: startDate, // Greater than or equal to 30 days ago
-                    [Op.lte]: givenDate, // Less than or equal to the given date
                 },
             },
             order: [['createdAt', 'DESC']], // Order by createdAt descending
